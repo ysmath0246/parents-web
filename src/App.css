@@ -1,0 +1,80 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* src/App.css */
+
+.react-calendar__tile.attend {
+  color: green;
+  font-weight: bold;
+}
+
+.react-calendar__tile.late {
+  color: orange;
+  font-weight: bold;
+}
+
+.react-calendar__tile.absent {
+  color: red;
+  font-weight: bold;
+}
+
+.react-calendar__tile.makeup {
+  color: blue;
+  font-weight: bold;
+}
+
+.react-calendar__tile.carry {
+  color: purple;
+  font-weight: bold;
+}
+
+.react-calendar__tile.no-record {
+  color: grey; /* ✨ 기록 없는 날은 회색 표시 */
+}
+
+.react-calendar__tile.today {
+  border: 2px solid #1565c0;
+  font-weight: bold;
+  border-radius: 50%;
+}
+

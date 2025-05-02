@@ -1,0 +1,185 @@
+// src/pages/AttendancePage.jsx
+import { useState, useEffect } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import { doc, getDocs, collection, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
+import { format } from "date-fns";
+import { generateScheduleWithRollovers } from "../firebase/logic";
+
+export default function AttendancePage() {
+  const studentId = localStorage.getItem("studentId");
+  const [student, setStudent] = useState(null);
+  const [attendance, setAttendance] = useState({});
+  const [makeups, setMakeups] = useState([]);
+  const [extraHolidays, setExtraHolidays] = useState([]);
+  const [sessions, setSessions] = useState([]);
+
+  useEffect(() => {
+    if (!studentId) return;
+
+    const unsub = onSnapshot(doc(db, "students", studentId), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setStudent({ id: docSnap.id, ...data });
+      }
+    });
+
+    (async () => {
+      const snap = await getDocs(collection(db, "attendance"));
+      const data = {};
+      snap.docs.forEach(docSnap => {
+        data[docSnap.id] = docSnap.data();
+      });
+      setAttendance(data);
+    })();
+
+    (async () => {
+      const snap = await getDocs(collection(db, "makeups"));
+      setMakeups(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    })();
+
+    (async () => {
+      const snap = await getDocs(collection(db, "holidays"));
+      setExtraHolidays(snap.docs.map(d => d.data().date));
+    })();
+
+    return () => unsub();
+  }, [studentId]);
+
+  useEffect(() => {
+    const rebuildLessons = async () => {
+      if (!student) return;
+
+      const days = student.schedules.map(s => s.day);
+      const cycleSize = days.length * 4;
+      const totalTarget = cycleSize * 10;
+      const allHolidays = [...extraHolidays];
+
+    // generate 호출
+let raw = generateScheduleWithRollovers(student.startDate, days, totalTarget * 2, allHolidays);
+
+// ✅ 무조건 첫날 포함 보정 (요일이 맞는 경우만)
+const startDateDay = new Date(student.startDate).getDay();
+const hasStartDay = days.includes(startDateDay);
+
+// 첫날이 요일에 맞는데 빠져있으면 강제 삽입
+if (hasStartDay && (!raw.length || raw[0].date !== student.startDate)) {
+  console.log(`✅ 첫날(${student.startDate})이 요일에 맞아서 추가됨`);
+  raw.unshift({ date: student.startDate });
+} else {
+  console.log(`ℹ️ 첫날(${student.startDate})은 이미 포함됨 or 요일 안 맞음`);
+}
+
+
+      const filtered = raw.filter(l => !allHolidays.includes(l.date));
+
+      const baseLessons = filtered.map((l, idx) => {
+        const att = attendance?.[l.date]?.[student.name];
+        let status = att?.status || '미정';
+        let time = att?.time || '';
+        return { date: l.date, status, time, originalIndex: idx };
+      });
+
+      const studentMakeups = makeups.filter(m => m.name === student.name);
+      const rollovers = studentMakeups.filter(m => m.type === '이월');
+      const clinics = studentMakeups.filter(m => m.type === '보강');
+      const extras = [];
+
+      for (const m of rollovers) {
+        const origin = baseLessons.find(l => l.date === m.sourceDate);
+        if (origin) origin.status = '이월';
+        if (m.date) {
+          extras.push({ date: m.date, status: '미정', time: '', originalIndex: -1 });
+        }
+      }
+
+      for (const m of clinics) {
+        if (m.date && !baseLessons.find(l => l.date === m.date && l.status === '보강')) {
+          extras.push({ date: m.date, status: '보강', time: '', originalIndex: -1 });
+        }
+      }
+
+      let merged = [...baseLessons, ...extras].sort((a, b) => a.date.localeCompare(b.date));
+      const existingKeys = new Set(merged.map(l => l.date + '-' + l.originalIndex));
+      let lastDate = merged.length > 0 ? merged.at(-1).date : student.startDate;
+
+      while (true) {
+        const normalCount = merged.filter(m => m.status !== '이월').length;
+        if (normalCount >= totalTarget) break;
+        const next = generateScheduleWithRollovers(lastDate, days, 1, allHolidays).find(d => {
+          const key = d.date + '-' + d.originalIndex;
+          return !existingKeys.has(key);
+        });
+        if (!next) break;
+        lastDate = next.date;
+        existingKeys.add(next.date + '-' + next.originalIndex);
+        merged.push({ date: next.date, status: '미정', time: '', originalIndex: next.originalIndex });
+      }
+
+      // 회차 번호 새로 매기기
+      const reindexed = [];
+      let count = 1;
+      for (let l of merged) {
+        reindexed.push({ ...l, session: l.status === '이월' ? 'X' : count++ });
+        if (count > cycleSize) count = 1;
+      }
+
+      setSessions(reindexed);
+    };
+
+    rebuildLessons();
+  }, [student, attendance, makeups, extraHolidays]);
+
+  if (!student) return <p>로딩 중…</p>;
+
+  return (
+    <div style={{ maxWidth: 600, margin: "40px auto", textAlign: "center" }}>
+      <h1>📅 출석 + 결제 루틴</h1>
+      <Calendar
+        tileContent={({ date, view }) => {
+          if (view !== "month") return null;
+          const d = format(date, "yyyy-MM-dd");
+          const ses = sessions.find(s => s.date === d);
+
+          let color;
+          if (ses?.status === '보강') {
+            color = 'purple';
+          } else if (ses?.status === '이월') {
+            color = 'orange';
+          } else if (ses?.status === 'onTime') {
+            color = '#4caf50';  // 출석
+          } else if (ses?.status === 'tardy') {
+            color = '#ff9800';  // 지각
+          } else if (ses?.status === '결석') {
+            color = '#f44336';  // 결석
+          } else if (extraHolidays.includes(d)) {
+            color = 'red';      // 휴일
+          } else if (ses) {
+            color = '#1565c0';  // 기본 회차
+          }
+
+          return (
+            <div style={{ fontSize: 12, color }}>
+              {ses ? `${ses.session}회차` : ""}
+            </div>
+          );
+        }}
+        onClickDay={(value) => {
+          const d = format(value, "yyyy-MM-dd");
+          const ses = sessions.find(s => s.date === d);
+          if (ses) {
+            alert(`📅 ${d} → ${ses.session}회차 (${ses.status})`);
+          } else {
+            alert(`📅 ${d} → 출석 기록 없음`);
+          }
+        }}
+      />
+
+      <p style={{ marginTop: 12, fontSize: 14 }}>
+        • 색상 설명:<br />
+        출석(초록), 지각(주황), 결석(빨강), 보강(보라), 이월(주황), 휴일(빨강), 회차(파랑)
+      </p>
+    </div>
+  );
+}
