@@ -67,7 +67,7 @@ export default function PaymentPage() {
         snapshot.forEach((doc) => {
           const data = doc.data();
           if (data.studentId === studentId) {
-            statuses[data.routineNumber] = data.paymentComplete;
+            statuses[data.routineNumber] = data.completed;
           }
         });
         setPaymentStatuses(statuses);  // 상태에 저장
@@ -242,7 +242,7 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
 
 {/* 둘째 줄 */}
 <p style={{ fontSize: 18, marginBottom: 24 }}>
-  {paymentCompleted[routineNumber]
+{paymentStatuses[routineNumber]
     ? "결제완료 되었습니다."
     : "아직 결제전입니다. 수업시작일 전에 결제 부탁드립니다."}
 </p>
