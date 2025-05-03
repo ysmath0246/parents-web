@@ -139,11 +139,11 @@ export default function AttendancePage() {
 
           let bgColor = "";
           if (ses?.status === '보강') {
-            bgColor = 'purple';
+            bgColor = 'yellowgreen';
           } else if (ses?.status === '이월') {
-            bgColor = 'orange';
+            bgColor = 'skyblue';
           } else if (ses?.status === '출석') {
-            bgColor = '#4caf50';
+            bgColor = 'green';
           } else if (ses?.status === '지각') {
             bgColor = '#ff9800';
           } else if (ses?.status === '결석') {
