@@ -20,6 +20,21 @@ export default function PaymentPage() {
   const [paymentStatuses, setPaymentStatuses] = useState({});
   const paymentMethods = ["계좌이체", "결제선생", "카드"];
 
+  useEffect(() => {
+    if (!studentId) return;
+    const unsubStudent = onSnapshot(doc(db, "students", studentId), (docSnap) => {
+      if (docSnap.exists()) {
+        console.log("학생 정보 가져옴:", docSnap.data());
+        setStudent(docSnap.data());
+      } else {
+        console.log("학생 정보 없음");
+      }
+    });
+    return () => unsubStudent();
+  }, [studentId]);
+
+  
+  
   // 기존 루틴별 결제 방법 가져오는 useEffect를 이렇게 개선
   useEffect(() => {
     if (!studentId) return;
@@ -104,6 +119,7 @@ export default function PaymentPage() {
     });
     
     return () => {
+      unsubStudent();
       unsubRoutine();
     };
   }, [studentId]);
