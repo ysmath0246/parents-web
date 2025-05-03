@@ -30,7 +30,7 @@ export default function App() {
       navigate("/notices");
     }
   }, [isLoggedIn]);
-  
+
   useEffect(() => {
     const checkLogin = () => {
       setIsLoggedIn(Boolean(localStorage.getItem("studentId")));
@@ -118,6 +118,7 @@ export default function App() {
           <Route path="/" element={
             isLoggedIn ? <Navigate to="/notices/" /> : <Navigate to="/login" />
           } />
+           <Route path="/" element={<Navigate to="/notices" />} />   {/* ✅ 추가 */}
           <Route path="/attendance" element={isLoggedIn ? <AttendancePage /> : <Navigate to="/login" />} />
           <Route path="/payment" element={isLoggedIn ? <PaymentPage /> : <Navigate to="/login" />} />
           <Route path="/points" element={isLoggedIn ? <PointsPage /> : <Navigate to="/login" />} />

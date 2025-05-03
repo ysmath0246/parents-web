@@ -141,30 +141,35 @@ if (hasStartDay && (!raw.length || raw[0].date !== student.startDate)) {
           if (view !== "month") return null;
           const d = format(date, "yyyy-MM-dd");
           const ses = sessions.find(s => s.date === d);
-
+        
           let color;
           if (ses?.status === '보강') {
             color = 'purple';
           } else if (ses?.status === '이월') {
             color = 'orange';
           } else if (ses?.status === 'onTime') {
-            color = '#4caf50';  // 출석
+            color = '#4caf50';
           } else if (ses?.status === 'tardy') {
-            color = '#ff9800';  // 지각
+            color = '#ff9800';
           } else if (ses?.status === '결석') {
-            color = '#f44336';  // 결석
+            color = '#f44336';
           } else if (extraHolidays.includes(d)) {
-            color = 'red';      // 휴일
+            color = 'red';
           } else if (ses) {
-            color = '#1565c0';  // 기본 회차
+            color = '#1565c0';
           }
-
+        
+          if (ses) {
+            console.log(`🟢 ${d} -> ${ses.session}회차 (${ses.status}) => ${color}`);
+          }
+        
           return (
             <div style={{ fontSize: 12, color }}>
               {ses ? `${ses.session}회차` : ""}
             </div>
           );
         }}
+        
         onClickDay={(value) => {
           const d = format(value, "yyyy-MM-dd");
           const ses = sessions.find(s => s.date === d);
