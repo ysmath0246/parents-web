@@ -8,7 +8,6 @@ import {
 } from 'react-router-dom';
 import { db } from "./firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import { useNavigate } from 'react-router-dom';
 
 
 import LoginPage from "./pages/LoginPage.jsx";
@@ -21,16 +20,10 @@ import NoticeDetailPage from "./pages/NoticeDetailPage.jsx";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem("studentId")));
-  const navigate = useNavigate();
   const [showChangePw, setShowChangePw] = useState(false);
   const [newPw, setNewPw] = useState("");
 
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      navigate("/notices");
-    }
-  }, [isLoggedIn]);
 
   useEffect(() => {
     const checkLogin = () => {
@@ -65,7 +58,7 @@ export default function App() {
       <div>
         {isLoggedIn && (
           <nav style={{ padding: 10, textAlign: "center" }}>
-            <Link to="/attendance" style={{ marginRight: 10 }}>출석</Link>
+            <Link to="/attendance" style={{ marginRight: 10 }}>달력</Link>
             <Link to="/payment" style={{ marginRight: 10 }}>결제</Link>
             <Link to="/points" style={{ marginRight: 10 }}>포인트</Link>
             <Link to="/notices" style={{ marginRight: 10 }}>공지사항</Link>
@@ -77,7 +70,7 @@ export default function App() {
             <button onClick={() => {
               localStorage.clear();
               setIsLoggedIn(false);
-              window.location.href = "/parent-web/#/login";
+              window.location.href = window.location.origin + "/parents-web/#/login";
             }} style={{ marginLeft: 10 }}>
               로그아웃
             </button>
