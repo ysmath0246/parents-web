@@ -56,21 +56,17 @@ export default function AttendancePage() {
       const totalTarget = cycleSize * 10;
       const allHolidays = [...extraHolidays];
 
-    // generate 호출
-let raw = generateScheduleWithRollovers(student.startDate, days, totalTarget * 2, allHolidays);
+      let raw = generateScheduleWithRollovers(student.startDate, days, totalTarget * 2, allHolidays);
 
-// ✅ 무조건 첫날 포함 보정 (요일이 맞는 경우만)
-const startDateDay = new Date(student.startDate).getDay();
-const hasStartDay = days.includes(startDateDay);
+      const startDateDay = new Date(student.startDate).getDay();
+      const hasStartDay = days.includes(startDateDay);
 
-// 첫날이 요일에 맞는데 빠져있으면 강제 삽입
-if (hasStartDay && (!raw.length || raw[0].date !== student.startDate)) {
-  console.log(`✅ 첫날(${student.startDate})이 요일에 맞아서 추가됨`);
-  raw.unshift({ date: student.startDate });
-} else {
-  console.log(`ℹ️ 첫날(${student.startDate})은 이미 포함됨 or 요일 안 맞음`);
-}
-
+      if (hasStartDay && (!raw.length || raw[0].date !== student.startDate)) {
+        console.log(`✅ 첫날(${student.startDate})이 요일에 맞아서 추가됨`);
+        raw.unshift({ date: student.startDate });
+      } else {
+        console.log(`ℹ️ 첫날(${student.startDate})은 이미 포함됨 or 요일 안 맞음`);
+      }
 
       const filtered = raw.filter(l => !allHolidays.includes(l.date));
 
@@ -117,7 +113,6 @@ if (hasStartDay && (!raw.length || raw[0].date !== student.startDate)) {
         merged.push({ date: next.date, status: '미정', time: '', originalIndex: next.originalIndex });
       }
 
-      // 회차 번호 새로 매기기
       const reindexed = [];
       let count = 1;
       for (let l of merged) {
@@ -141,35 +136,51 @@ if (hasStartDay && (!raw.length || raw[0].date !== student.startDate)) {
           if (view !== "month") return null;
           const d = format(date, "yyyy-MM-dd");
           const ses = sessions.find(s => s.date === d);
-        
-          let color;
+
+          let bgColor = "";
           if (ses?.status === '보강') {
-            color = 'purple';
+            bgColor = 'purple';
           } else if (ses?.status === '이월') {
-            color = 'orange';
-          } else if (ses?.status === 'onTime') {
-            color = '#4caf50';
-          } else if (ses?.status === 'tardy') {
-            color = '#ff9800';
+            bgColor = 'orange';
+          } else if (ses?.status === '출석') {
+            bgColor = '#4caf50';
+          } else if (ses?.status === '지각') {
+            bgColor = '#ff9800';
           } else if (ses?.status === '결석') {
-            color = '#f44336';
+            bgColor = '#f44336';
           } else if (extraHolidays.includes(d)) {
-            color = 'red';
-          } else if (ses) {
-            color = '#1565c0';
+            bgColor = 'red';
           }
-        
-          if (ses) {
-            console.log(`🟢 ${d} -> ${ses.session}회차 (${ses.status}) => ${color}`);
-          }
-        
-          return (
-            <div style={{ fontSize: 12, color }}>
-              {ses ? `${ses.session}회차` : ""}
+
+          const today = new Date();
+          const isToday = date.toDateString() === today.toDateString();
+
+          return ses ? (
+            <div style={{
+              background: bgColor ? bgColor : (isToday ? 'yellow' : ''),
+              color: 'black',
+              borderRadius: 4,
+              padding: 2,
+              fontSize: 12,
+              textAlign: 'center',
+            }}>
+              <div>{`${ses.session}회차`}</div>
+              {ses.time && (
+                <div style={{ fontSize: 10 }}>
+                  {ses.time}
+                </div>
+              )}
             </div>
-          );
+          ) : isToday ? (
+            <div style={{
+              background: 'yellow',
+              borderRadius: 4,
+              padding: 2,
+              fontSize: 12,
+              textAlign: 'center',
+            }}></div>
+          ) : null;
         }}
-        
         onClickDay={(value) => {
           const d = format(value, "yyyy-MM-dd");
           const ses = sessions.find(s => s.date === d);
@@ -183,7 +194,7 @@ if (hasStartDay && (!raw.length || raw[0].date !== student.startDate)) {
 
       <p style={{ marginTop: 12, fontSize: 14 }}>
         • 색상 설명:<br />
-        출석(초록), 지각(주황), 결석(빨강), 보강(보라), 이월(주황), 휴일(빨강), 회차(파랑)
+        출석(초록), 지각(주황), 결석(빨강), 보강(보라), 이월(주황), 휴일(빨강), 오늘(노랑)
       </p>
     </div>
   );
