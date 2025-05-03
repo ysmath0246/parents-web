@@ -64,22 +64,22 @@ export default function PaymentPage() {
     };
   }, [studentId]);
 
-  const handlePaymentSelect = async (method) => {
+  const handlePaymentSelect = async (method, routineNum) => {
     setSelectedPayment(method);
-    if (studentId && routineNumber) {  // ✅ routineNumber도 반드시 가져옴
+    if (studentId && routineNum) {
       try {
-        await setDoc(doc(db, "payments", `${studentId}_routine_${routineNumber}`), {
+        await setDoc(doc(db, "payments", `${studentId}_routine_${routineNum}`), {
           studentId,
-          routineNumber,
+          routineNumber: routineNum,
           paymentMethod: method,
           updatedAt: new Date().toISOString(),
         }, { merge: true });
-        console.log("✅ 결제방법 저장 완료 (루틴별): ", method);
+        console.log("✅ 결제방법 저장 완료 (루틴별): ", method, "(루틴:", routineNum, ")");
       } catch (err) {
         console.error("❌ 결제방법 저장 오류: ", err);
       }
     }
-  };
+};
 
   if (!student) return <p>로딩 중…</p>;
 
@@ -107,47 +107,48 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
       {/* 결제 방법 선택 */}
       <h3 style={{ fontWeight: "bold", marginBottom: 8 }}>결제 방법 선택</h3>
       <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-        <button
-          className="px-2 py-1 text-xs"
-          onClick={() => handlePaymentSelect("계좌이체")}
-          style={{
-            flex: 1,
-            padding: 8,
-            background: "#4caf50",
-            color: "white",
-            borderRadius: 4
-          }}
-        >
-          계좌이체
-        </button>
+      <button
+  className="px-2 py-1 text-xs"
+  onClick={() => handlePaymentSelect("계좌이체", routineNumber)}
+  style={{
+    flex: 1,
+    padding: 8,
+    background: "#4caf50",
+    color: "white",
+    borderRadius: 4
+  }}
+>
+  계좌이체
+</button>
 
-        <button
-          className="px-2 py-1 text-xs"
-          onClick={() => handlePaymentSelect("결제선생")}
-          style={{
-            flex: 1,
-            padding: 8,
-            background: "#2196f3",
-            color: "white",
-            borderRadius: 4
-          }}
-        >
-          결제선생
-        </button>
+<button
+  className="px-2 py-1 text-xs"
+  onClick={() => handlePaymentSelect("결제선생", routineNumber)}
+  style={{
+    flex: 1,
+    padding: 8,
+    background: "#2196f3",
+    color: "white",
+    borderRadius: 4
+  }}
+>
+  결제선생
+</button>
 
-        <button
-          className="px-2 py-1 text-xs"
-          onClick={() => handlePaymentSelect("카드")}
-          style={{
-            flex: 1,
-            padding: 8,
-            background: "#f44336",
-            color: "white",
-            borderRadius: 4
-          }}
-        >
-          카드
-        </button>
+<button
+  className="px-2 py-1 text-xs"
+  onClick={() => handlePaymentSelect("카드", routineNumber)}
+  style={{
+    flex: 1,
+    padding: 8,
+    background: "#f44336",
+    color: "white",
+    borderRadius: 4
+  }}
+>
+  카드
+</button>
+
 
         
       </div>
