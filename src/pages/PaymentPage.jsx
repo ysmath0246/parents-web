@@ -57,7 +57,6 @@ export default function PaymentPage() {
   }, [studentId]);
   
 
-
   useEffect(() => {
     if (!studentId) return;
   
@@ -71,12 +70,13 @@ export default function PaymentPage() {
             statuses[data.routineNumber] = data.paymentComplete;
           }
         });
-        setPaymentStatuses(statuses);  // 🔥 상태에 저장
+        setPaymentStatuses(statuses);  // 상태에 저장
       }
     );
   
     return () => unsub();
   }, [studentId]);
+  
 
   
   useEffect(() => {
@@ -234,13 +234,15 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
 
 
 {/* 첫 줄 */}
+
 <h1 style={{ marginBottom: 8 }}>
-  {student.name}님의 수업 루틴 {routineNumber}
+  {student.name}님의 수업 루틴 {routineNumber != null ? routineNumber : (currentRoutineIndex + 1)}
 </h1>
+
 
 {/* 둘째 줄 */}
 <p style={{ fontSize: 18, marginBottom: 24 }}>
-  {paymentStatuses[routineNumber]
+  {paymentCompleted[routineNumber]
     ? "결제완료 되었습니다."
     : "아직 결제전입니다. 수업시작일 전에 결제 부탁드립니다."}
 </p>

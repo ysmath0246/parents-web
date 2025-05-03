@@ -8,6 +8,8 @@ import {
 } from 'react-router-dom';
 import { db } from "./firebase";
 import { doc, updateDoc } from "firebase/firestore";
+import { useNavigate } from 'react-router-dom';
+
 
 import LoginPage from "./pages/LoginPage.jsx";
 import AttendancePage from "./pages/AttendancePage.jsx";
@@ -21,7 +23,14 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem("studentId")));
   const [showChangePw, setShowChangePw] = useState(false);
   const [newPw, setNewPw] = useState("");
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/notices");
+    }
+  }, [isLoggedIn]);
+  
   useEffect(() => {
     const checkLogin = () => {
       setIsLoggedIn(Boolean(localStorage.getItem("studentId")));
@@ -107,7 +116,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
           <Route path="/" element={
-            isLoggedIn ? <Navigate to="/attendance" /> : <Navigate to="/login" />
+            isLoggedIn ? <Navigate to="/notices/" /> : <Navigate to="/login" />
           } />
           <Route path="/attendance" element={isLoggedIn ? <AttendancePage /> : <Navigate to="/login" />} />
           <Route path="/payment" element={isLoggedIn ? <PaymentPage /> : <Navigate to="/login" />} />
