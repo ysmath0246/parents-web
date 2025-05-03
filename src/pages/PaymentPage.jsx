@@ -7,7 +7,7 @@ import {
   getDoc,
   onSnapshot,
 } from "firebase/firestore";
-
+import { collection } from "firebase/firestore";
 
 export default function PaymentPage() {
   const studentId = localStorage.getItem("studentId");
@@ -21,50 +21,51 @@ export default function PaymentPage() {
   const paymentMethods = ["계좌이체", "결제선생", "카드"];
 
   // 기존 루틴별 결제 방법 가져오는 useEffect를 이렇게 개선
-useEffect(() => {
-  if (!studentId) return;
-
-  const unsub = onSnapshot(
-    doc(db, "payments", `${studentId}_routine_${routineNumber}`),
-    (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        setSelectedPayments(prev => ({
-          ...prev,
-          [routineNumber]: data.paymentMethod
-        }));
-        setPaymentStatuses(prev => ({
-          ...prev,
-          [routineNumber]: data.paymentComplete || false
-        }));
-      } else {
-        setSelectedPayments(prev => ({
-          ...prev,
-          [routineNumber]: null
-        }));
-        setPaymentStatuses(prev => ({
-          ...prev,
-          [routineNumber]: false
-        }));
-      }
-    }
-  );
-
-  return () => unsub();
-}, [studentId, routineNumber]);
+  useEffect(() => {
+    if (!studentId) return;
   
+    const unsub = onSnapshot(
+      collection(db, "payments"),
+      (snapshot) => {
+        const updates = {};
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.studentId === studentId) {
+            updates[data.routineNumber] = data.paymentMethod;
+          }
+        });
+        setSelectedPayments(updates);
+      }
+    );
+  
+    return () => unsub();
+  }, [studentId]);
+  
+
 
   useEffect(() => {
     if (!studentId) return;
-
-    const unsubStudent = onSnapshot(doc(db, "students", studentId), (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setStudent({ id: docSnap.id, ...data });
-        setSelectedPayment(data.paymentMethod || "");
-        setPaymentComplete(data.paymentComplete || false);
+  
+    const unsub = onSnapshot(
+      collection(db, "payment_completed"),
+      (snapshot) => {
+        const statuses = {};
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.studentId === studentId) {
+            statuses[data.routineNumber] = data.paymentComplete;
+          }
+        });
+        setPaymentStatuses(statuses);  // 🔥 상태에 저장
       }
-    });
+    );
+  
+    return () => unsub();
+  }, [studentId]);
+
+  
+  useEffect(() => {
+    if (!studentId) return;
 
     const unsubRoutine = onSnapshot(doc(db, "routines", studentId), (docSnap) => {
       if (docSnap.exists()) {
@@ -99,7 +100,6 @@ useEffect(() => {
     });
     
     return () => {
-      unsubStudent();
       unsubRoutine();
     };
   }, [studentId]);
@@ -219,6 +219,7 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
     ? "결제완료 되었습니다."
     : "아직 결제전입니다. 수업시작일 전에 결제 부탁드립니다."}
 </p>
+
 
 
  
