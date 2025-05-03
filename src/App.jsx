@@ -17,6 +17,8 @@ import PointsPage from "./pages/PointsPage.jsx";
 import NoticesPage from "./pages/NoticesPage.jsx";
 import HolidaysPage from "./pages/HolidaysPage.jsx";
 import NoticeDetailPage from "./pages/NoticeDetailPage.jsx";
+import { NavLink } from 'react-router-dom';
+
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem("studentId")));
@@ -58,22 +60,22 @@ export default function App() {
       <div>
         {isLoggedIn && (
           <nav style={{ padding: 10, textAlign: "center" }}>
-            <Link to="/attendance" style={{ marginRight: 10 }}>달력</Link>
-            <Link to="/payment" style={{ marginRight: 10 }}>결제</Link>
-            <Link to="/points" style={{ marginRight: 10 }}>포인트</Link>
-            <Link to="/notices" style={{ marginRight: 10 }}>공지사항</Link>
-            <Link to="/holidays" style={{ marginRight: 10 }}>휴일</Link>
+           <NavLink to="/attendance" style={{ marginRight: 10 }}>달력</NavLink>
+<NavLink to="/payment" style={{ marginRight: 10 }}>결제</NavLink>
+<NavLink to="/points" style={{ marginRight: 10 }}>포인트</NavLink>
+<NavLink to="/notices" style={{ marginRight: 10 }}>공지사항</NavLink>
+<NavLink to="/holidays" style={{ marginRight: 10 }}>휴일</NavLink>
 
             <button onClick={() => setShowChangePw(true)} style={{ marginLeft: 10 }}>
               PIN 변경
             </button>
             <button onClick={() => {
-              localStorage.clear();
-              setIsLoggedIn(false);
-              window.location.href = window.location.origin + "/parents-web/#/login";
-            }} style={{ marginLeft: 10 }}>
-              로그아웃
-            </button>
+  localStorage.clear();
+  setIsLoggedIn(false);
+  window.location.hash = "#/login";  // ✅ 이렇게 하면 새로고침 안 하고 이동됨
+}} style={{ marginLeft: 10 }}>
+  로그아웃
+</button>
 
             {showChangePw && (
               <div style={{
