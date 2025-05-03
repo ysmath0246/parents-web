@@ -17,6 +17,7 @@ export default function PaymentPage() {
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [currentRoutineIndex, setCurrentRoutineIndex] = useState(0);
   const [selectedPayments, setSelectedPayments] = useState({});
+  const [paymentStatuses, setPaymentStatuses] = useState({});
   const paymentMethods = ["계좌이체", "결제선생", "카드"];
 
   // 기존 루틴별 결제 방법 가져오는 useEffect를 이렇게 개선
