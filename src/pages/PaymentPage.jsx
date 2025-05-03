@@ -70,7 +70,9 @@ export default function PaymentPage() {
     const unsubRoutine = onSnapshot(doc(db, "routines", studentId), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
+        console.log("루틴 데이터:", data);  // ✅ 이거 확인
         const lessons = data.lessons || [];
+        console.log("lessons 배열:", lessons);
         setSessions(lessons);
     
         // ✅ 오늘 날짜가 포함된 루틴 찾기
@@ -93,6 +95,8 @@ export default function PaymentPage() {
         if (foundIndex !== -1) {
           setCurrentRoutineIndex(foundIndex);
         } else {
+          console.log("루틴 문서 없음!");
+
           // 오늘 포함된 루틴 없으면 기본 0
           setCurrentRoutineIndex(0);
         }
@@ -103,6 +107,11 @@ export default function PaymentPage() {
       unsubRoutine();
     };
   }, [studentId]);
+
+  useEffect(() => {
+    console.log("sessions 변경됨:", sessions);
+  }, [sessions]);
+  
 
  const handlePaymentSelect = async (method, routineNum) => {
     setSelectedPayments(prev => ({
