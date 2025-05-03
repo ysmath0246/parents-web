@@ -1,8 +1,12 @@
 // src/pages/PaymentPage.jsx
 import  { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { doc, updateDoc, onSnapshot } from "firebase/firestore";
-import { setDoc } from "firebase/firestore";  // 꼭
+import {
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot,
+} from "firebase/firestore";
 
 
 export default function PaymentPage() {
@@ -13,31 +17,40 @@ export default function PaymentPage() {
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [currentRoutineIndex, setCurrentRoutineIndex] = useState(0);
   const [selectedPayments, setSelectedPayments] = useState({});
+  const paymentMethods = ["계좌이체", "결제선생", "카드"];
 
-  useEffect(() => {
-    if (!studentId) return;
-  
-    const unsubRoutine = onSnapshot(
-      doc(db, "payments", `${studentId}_routine_${routineNumber}`),
-      (snap) => {
-        if (snap.exists()) {
-          const data = snap.data();
-          setSelectedPayments(prev => ({
-            ...prev,
-            [routineNumber]: data.paymentMethod
-          }));
-        } else {
-          setSelectedPayments(prev => ({
-            ...prev,
-            [routineNumber]: null
-          }));
-        }
+  // 기존 루틴별 결제 방법 가져오는 useEffect를 이렇게 개선
+useEffect(() => {
+  if (!studentId) return;
+
+  const unsub = onSnapshot(
+    doc(db, "payments", `${studentId}_routine_${routineNumber}`),
+    (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setSelectedPayments(prev => ({
+          ...prev,
+          [routineNumber]: data.paymentMethod
+        }));
+        setPaymentStatuses(prev => ({
+          ...prev,
+          [routineNumber]: data.paymentComplete || false
+        }));
+      } else {
+        setSelectedPayments(prev => ({
+          ...prev,
+          [routineNumber]: null
+        }));
+        setPaymentStatuses(prev => ({
+          ...prev,
+          [routineNumber]: false
+        }));
       }
-    );
-  
-    return () => unsubRoutine();
-  }, [studentId, routineNumber]);  // ✅ 반드시 routineNumber 의존성 포함
+    }
+  );
 
+  return () => unsub();
+}, [studentId, routineNumber]);
   
 
   useEffect(() => {
@@ -98,12 +111,14 @@ export default function PaymentPage() {
 
     if (studentId && routineNum) {
       try {
-        await setDoc(doc(db, "payments", `${studentId}_routine_${routineNum}`), {
-          studentId,
-          routineNumber: routineNum,
-          paymentMethod: method,
-          updatedAt: new Date().toISOString(),
-        }, { merge: true });
+       await setDoc(doc(db, "payments", `${studentId}_routine_${routineNum}`), {
+  studentId,
+  routineNumber: routineNum,
+  paymentMethod: method,
+  paymentComplete: false,  // ✅ 초기엔 false로 저장
+  updatedAt: new Date().toISOString(),
+}, { merge: true });
+
         console.log("✅ 결제방법 저장 완료 (루틴별): ", method, "(루틴:", routineNum, ")");
       } catch (err) {
         console.error("❌ 결제방법 저장 오류: ", err);
@@ -199,10 +214,11 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
 
 {/* 둘째 줄 */}
 <p style={{ fontSize: 18, marginBottom: 24 }}>
-  {paymentComplete
+  {paymentStatuses[routineNumber]
     ? "결제완료 되었습니다."
     : "아직 결제전입니다. 수업시작일 전에 결제 부탁드립니다."}
 </p>
+
 
  
 
