@@ -142,9 +142,9 @@ export default function AttendancePage() {
             bgColor = 'yellowgreen';
           } else if (ses?.status === '이월') {
             bgColor = 'skyblue';
-          } else if (ses?.status === '출석') {
+          } else if (['출석', 'onTime'].includes(ses?.status)) {
             bgColor = 'green';
-          } else if (ses?.status === '지각') {
+          } else if  (['지각', 'tardy'].includes(ses?.status)) {
             bgColor = '#ff9800';
           } else if (ses?.status === '결석') {
             bgColor = '#f44336';
@@ -194,7 +194,7 @@ export default function AttendancePage() {
 
       <p style={{ marginTop: 12, fontSize: 14 }}>
         • 색상 설명:<br />
-        출석(초록), 지각(주황), 결석(빨강), 보강(보라), 이월(주황), 휴일(빨강), 오늘(노랑)
+        출석(초록), 지각(주황), 결석(빨강), 보강(연두), 이월(하늘), 오늘(노랑)
       </p>
     </div>
   );
