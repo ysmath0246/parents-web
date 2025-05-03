@@ -12,8 +12,34 @@ export default function PaymentPage() {
   const [selectedPayment, setSelectedPayment] = useState("");
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [currentRoutineIndex, setCurrentRoutineIndex] = useState(0);
+  const [selectedPayments, setSelectedPayments] = useState({});
 
-     
+  useEffect(() => {
+    if (!studentId) return;
+  
+    const unsubRoutine = onSnapshot(
+      doc(db, "payments", `${studentId}_routine_${routineNumber}`),
+      (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          setSelectedPayments(prev => ({
+            ...prev,
+            [routineNumber]: data.paymentMethod
+          }));
+        } else {
+          setSelectedPayments(prev => ({
+            ...prev,
+            [routineNumber]: null
+          }));
+        }
+      }
+    );
+  
+    return () => unsubRoutine();
+  }, [studentId, routineNumber]);  // ✅ 반드시 routineNumber 의존성 포함
+
+  
+
   useEffect(() => {
     if (!studentId) return;
 
@@ -64,8 +90,12 @@ export default function PaymentPage() {
     };
   }, [studentId]);
 
-  const handlePaymentSelect = async (method, routineNum) => {
-    setSelectedPayment(method);
+ const handlePaymentSelect = async (method, routineNum) => {
+    setSelectedPayments(prev => ({
+      ...prev,
+      [routineNum]: method
+    }));
+
     if (studentId && routineNum) {
       try {
         await setDoc(doc(db, "payments", `${studentId}_routine_${routineNum}`), {
@@ -80,6 +110,7 @@ export default function PaymentPage() {
       }
     }
 };
+
 
   if (!student) return <p>로딩 중…</p>;
 
@@ -152,9 +183,10 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
 
         
       </div>
-<p style={{ fontSize: 16, marginBottom: 16 }}>
-  현재 선택된 결제방법: {selectedPayment || "없음"}
+      <p style={{ fontSize: 16, marginBottom: 16 }}>
+  현재 선택된 결제방법: {selectedPayments[routineNumber] || "없음"}
 </p>
+
 
       {/* 결제 상태 표시 */}
 
