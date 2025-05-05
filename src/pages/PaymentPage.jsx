@@ -67,7 +67,7 @@ export default function PaymentPage() {
         snapshot.forEach((doc) => {
           const data = doc.data();
           if (data.studentId === studentId) {
-            statuses[data.routineNumber] = data.completed;
+            statuses[String(data.routineNumber)] = data.completed;
           }
         });
         setPaymentStatuses(statuses);  // 상태에 저장
