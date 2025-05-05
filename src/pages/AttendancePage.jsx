@@ -129,8 +129,8 @@ export default function AttendancePage() {
   if (!student) return <p>로딩 중…</p>;
 
   return (
-    <div style={{ maxWidth: 600, margin: "40px auto", textAlign: "center" }}>
-      <h1>📅 출석 + 결제 루틴</h1>
+    <div style={{ maxWidth: 600, margin: "40px auto", textAlign: "center" , fontSize: "18px"}}>
+        <h1 style={{ fontSize: "24px" }}>📅 출석 확인 </h1>
       <Calendar
         tileContent={({ date, view }) => {
           if (view !== "month") return null;

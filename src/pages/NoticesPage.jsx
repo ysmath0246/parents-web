@@ -32,7 +32,7 @@ export default function NoticesPage() {
 
   return (
     <div style={{ maxWidth: 600, margin: "0 auto", padding: 16 }}>
-      <h1>공지사항</h1>
+        <h1 style={{ fontSize: "24px" }}>공지사항</h1>
       <ul style={{ listStyle: "none", padding: 0 }}>
         {notices.map(n => (
           <li key={n.id} style={{ margin: "8px 0", borderBottom: "1px solid #ccc", paddingBottom: 8 }}>

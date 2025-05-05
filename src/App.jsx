@@ -60,8 +60,8 @@ export default function App() {
       <div>
         {isLoggedIn && (
           <nav style={{ padding: 10, textAlign: "center" }}>
-           <NavLink to="/attendance" style={{ marginRight: 10 }}>달력</NavLink>
-<NavLink to="/payment" style={{ marginRight: 10 }}>결제</NavLink>
+           <NavLink to="/attendance" style={{ marginRight: 10 }}>달력/출석</NavLink>
+<NavLink to="/payment" style={{ marginRight: 10 }}>수업/결제</NavLink>
 <NavLink to="/points" style={{ marginRight: 10 }}>포인트</NavLink>
 <NavLink to="/notices" style={{ marginRight: 10 }}>공지사항</NavLink>
 <NavLink to="/holidays" style={{ marginRight: 10 }}>휴일</NavLink>

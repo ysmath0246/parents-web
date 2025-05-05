@@ -228,6 +228,23 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
   현재 선택된 결제방법: {selectedPayments[routineNumber] || "없음"}
 </p>
 
+{selectedPayments[routineNumber] === "카드" && (
+  <p style={{ fontSize: 14, color: "#555" }}>
+    마지막 수업일이나 다음 수업시작일 전에 보내주세요
+  </p>
+)}
+
+{selectedPayments[routineNumber] === "결제선생" && (
+  <p style={{ fontSize: 14, color: "#555" }}>
+    다음수업시작일 5일 전 보내드리겠습니다.
+  </p>
+)}
+
+{selectedPayments[routineNumber] === "계좌이체" && (
+  <p style={{ fontSize: 14, color: "#555" }}>
+    00000-000-카카오뱅크 ㅇㅇㅇ
+  </p>
+)}
 
       {/* 결제 상태 표시 */}
 
@@ -235,7 +252,7 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
 
 {/* 첫 줄 */}
 
-<h1 style={{ marginBottom: 8 }}>
+<h1 style={{ marginBottom: 8, fontSize: "20px" }}>
   {student.name}님의 수업 루틴 {routineNumber != null ? routineNumber : (currentRoutineIndex + 1)}
 </h1>
 
@@ -248,7 +265,12 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
 </p>
 
 
-
+{/* 안내문구 */}
+<p style={{ fontSize: 18 }}>
+        {nextRoutineFirstDate
+          ? `다음 루틴 결제일: ${nextRoutineFirstDate} / 다음 수업시작일입니다. 수업시작일 전에 결제 부탁드립니다.`
+          : "다음 루틴 시작일 정보를 불러오지 못했습니다."}
+      </p>
  
 
       {/* 표 */}
@@ -327,12 +349,7 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
 
       
 
-      {/* 안내문구 */}
-      <p style={{ fontSize: 14 }}>
-        {nextRoutineFirstDate
-          ? `다음 루틴 결제일: ${nextRoutineFirstDate} / 다음 수업시작일입니다. 수업시작일 전에 결제 부탁드립니다.`
-          : "다음 루틴 시작일 정보를 불러오지 못했습니다."}
-      </p>
+      
     </div>
   );
 }
