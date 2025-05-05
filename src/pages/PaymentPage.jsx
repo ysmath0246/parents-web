@@ -197,50 +197,65 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
   </p>
 
   {/* 4️⃣ 결제 방법 선택 */}
-  <h3 style={{ fontWeight: "bold", marginBottom: 12 }}>결제 방법 선택</h3>
-  <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24 }}>
-    <button
-      className="px-2 py-1 text-xs"
-      onClick={() => handlePaymentSelect("계좌이체", routineNumber)}
-      style={{
-        padding: "4px 8px",
-        background: "#4caf50",
-        color: "white",
-        borderRadius: 4,
-        fontSize: "12px"
-      }}
-    >
-      계좌이체
-    </button>
+ {/* 4️⃣ 결제 방법 선택 + 버튼 한 줄에 */}
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    justifyContent: "center",
+    marginBottom: 24,
+    flexWrap: "wrap"  // 너무 좁을 땐 알아서 줄바꿈되게 (안 넣어도 됨)
+  }}
+>
+  <h3 style={{ fontWeight: "bold", margin: 0, fontSize: 16 }}>결제 방법 선택</h3>
 
-    <button
-      className="px-2 py-1 text-xs"
-      onClick={() => handlePaymentSelect("결제선생", routineNumber)}
-      style={{
-        padding: "4px 8px",
-        background: "#2196f3",
-        color: "white",
-        borderRadius: 4,
-        fontSize: "12px"
-      }}
-    >
-      결제선생
-    </button>
+  <button
+    className="px-2 py-1 text-xs"
+    onClick={() => handlePaymentSelect("계좌이체", routineNumber)}
+    style={{
+      padding: "4px 8px",
+      background: "#4caf50",
+      color: "white",
+      borderRadius: 4,
+      fontSize: "12px",
+      minWidth: "80px",
+    }}
+  >
+    계좌이체
+  </button>
 
-    <button
-      className="px-2 py-1 text-xs"
-      onClick={() => handlePaymentSelect("카드", routineNumber)}
-      style={{
-        padding: "4px 8px",
-        background: "#f44336",
-        color: "white",
-        borderRadius: 4,
-        fontSize: "12px"
-      }}
-    >
-      카드
-    </button>
-  </div>
+  <button
+    className="px-2 py-1 text-xs"
+    onClick={() => handlePaymentSelect("결제선생", routineNumber)}
+    style={{
+      padding: "4px 8px",
+      background: "#2196f3",
+      color: "white",
+      borderRadius: 4,
+      fontSize: "12px",
+      minWidth: "80px",
+    }}
+  >
+    결제선생
+  </button>
+
+  <button
+    className="px-2 py-1 text-xs"
+    onClick={() => handlePaymentSelect("카드", routineNumber)}
+    style={{
+      padding: "4px 8px",
+      background: "#f44336",
+      color: "white",
+      borderRadius: 4,
+      fontSize: "12px",
+      minWidth: "80px",
+    }}
+  >
+    카드
+  </button>
+</div>
+
 
   {/* 5️⃣ 현재 선택된 결제방법 + 화살표 내용 */}
   <p style={{ fontSize: 16, marginBottom: 16 }}>
