@@ -4,7 +4,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 
-export default function LoginPage() {
+export default function LoginPage({ onLoginSuccess }) {
   const [birthId, setBirthId] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
@@ -58,7 +58,7 @@ export default function LoginPage() {
 
   return (
     <div style={{ maxWidth: 320, margin: "100px auto", textAlign: "center" }}>
-      <h1>학부모 로그인</h1>
+        <h1 style={{ fontSize: "24px" }}>학부모 로그인</h1>
       <input
         style={{ width: "100%", padding: 8, margin: "8px 0" }}
         value={birthId}

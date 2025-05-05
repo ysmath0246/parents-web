@@ -108,19 +108,19 @@ export default function App() {
             )}
           </nav>
         )}
+<Routes>
+  <Route path="/login" element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
+  <Route path="/" element={
+    isLoggedIn ? <Navigate to="/notices" replace /> : <Navigate to="/login" replace />
+  } />
+  <Route path="/attendance" element={isLoggedIn ? <AttendancePage /> : <Navigate to="/login" replace />} />
+  <Route path="/payment" element={isLoggedIn ? <PaymentPage /> : <Navigate to="/login" replace />} />
+  <Route path="/points" element={isLoggedIn ? <PointsPage /> : <Navigate to="/login" replace />} />
+  <Route path="/notices" element={isLoggedIn ? <NoticesPage /> : <Navigate to="/login" replace />} />
+  <Route path="/notices/:id" element={isLoggedIn ? <NoticeDetailPage /> : <Navigate to="/login" replace />} />
+  <Route path="/holidays" element={isLoggedIn ? <HolidaysPage /> : <Navigate to="/login" replace />} />
+</Routes>
 
-        <Routes>
-          <Route path="/login" element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
-          <Route path="/" element={
-            isLoggedIn ? <Navigate to="/notices/" /> : <Navigate to="/login" />
-          } />
-          <Route path="/attendance" element={isLoggedIn ? <AttendancePage /> : <Navigate to="/login" />} />
-          <Route path="/payment" element={isLoggedIn ? <PaymentPage /> : <Navigate to="/login" />} />
-          <Route path="/points" element={isLoggedIn ? <PointsPage /> : <Navigate to="/login" />} />
-          <Route path="/notices" element={isLoggedIn ? <NoticesPage /> : <Navigate to="/login" />} />
-          <Route path="/notices/:id" element={isLoggedIn ? <NoticeDetailPage /> : <Navigate to="/login" />} />
-          <Route path="/holidays" element={isLoggedIn ? <HolidaysPage /> : <Navigate to="/login" />} />
-        </Routes>
       </div>
     </HashRouter>
   );
