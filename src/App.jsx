@@ -4,11 +4,12 @@ import {
   Routes,
   Route,
   Link,
-  Navigate
+  Navigate,
+  NavLink,
+  useLocation
 } from 'react-router-dom';
 import { db } from "./firebase";
 import { doc, updateDoc } from "firebase/firestore";
-
 
 import LoginPage from "./pages/LoginPage.jsx";
 import AttendancePage from "./pages/AttendancePage.jsx";
@@ -17,16 +18,14 @@ import PointsPage from "./pages/PointsPage.jsx";
 import NoticesPage from "./pages/NoticesPage.jsx";
 import HolidaysPage from "./pages/HolidaysPage.jsx";
 import NoticeDetailPage from "./pages/NoticeDetailPage.jsx";
-import { NavLink } from 'react-router-dom';
-
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem("studentId")));
   const [showChangePw, setShowChangePw] = useState(false);
   const [newPw, setNewPw] = useState("");
+  const location = useLocation();  // ✅ 라우터 감지용 추가
 
-
-
+  // ✅ 기존: storage 이벤트
   useEffect(() => {
     const checkLogin = () => {
       setIsLoggedIn(Boolean(localStorage.getItem("studentId")));
@@ -37,6 +36,11 @@ export default function App() {
       window.removeEventListener("storage", checkLogin);
     };
   }, []);
+
+  // ✅ 추가: 라우터 변경 시에도 로그인 상태 다시 체크
+  useEffect(() => {
+    setIsLoggedIn(Boolean(localStorage.getItem("studentId")));
+  }, [location]);
 
   async function handlePasswordChange() {
     const studentId = localStorage.getItem("studentId");
@@ -60,22 +64,22 @@ export default function App() {
       <div>
         {isLoggedIn && (
           <nav style={{ padding: 10, textAlign: "center" }}>
-           <NavLink to="/attendance" style={{ marginRight: 10 }}>달력/출석</NavLink>
-<NavLink to="/payment" style={{ marginRight: 10 }}>수업/결제</NavLink>
-<NavLink to="/points" style={{ marginRight: 10 }}>포인트</NavLink>
-<NavLink to="/notices" style={{ marginRight: 10 }}>공지사항</NavLink>
-<NavLink to="/holidays" style={{ marginRight: 10 }}>휴일</NavLink>
+            <NavLink to="/attendance" style={{ marginRight: 10 }}>달력/출석</NavLink>
+            <NavLink to="/payment" style={{ marginRight: 10 }}>수업/결제</NavLink>
+            <NavLink to="/points" style={{ marginRight: 10 }}>포인트</NavLink>
+            <NavLink to="/notices" style={{ marginRight: 10 }}>공지사항</NavLink>
+            <NavLink to="/holidays" style={{ marginRight: 10 }}>휴일</NavLink>
 
             <button onClick={() => setShowChangePw(true)} style={{ marginLeft: 10 }}>
               PIN 변경
             </button>
             <button onClick={() => {
-  localStorage.clear();
-  setIsLoggedIn(false);
-  window.location.hash = "#/login";  // ✅ 이렇게 하면 새로고침 안 하고 이동됨
-}} style={{ marginLeft: 10 }}>
-  로그아웃
-</button>
+              localStorage.clear();
+              setIsLoggedIn(false);
+              window.location.hash = "#/login";
+            }} style={{ marginLeft: 10 }}>
+              로그아웃
+            </button>
 
             {showChangePw && (
               <div style={{
@@ -108,19 +112,19 @@ export default function App() {
             )}
           </nav>
         )}
-<Routes>
-  <Route path="/login" element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
-  <Route path="/" element={
-    isLoggedIn ? <Navigate to="/notices" replace /> : <Navigate to="/login" replace />
-  } />
-  <Route path="/attendance" element={isLoggedIn ? <AttendancePage /> : <Navigate to="/login" replace />} />
-  <Route path="/payment" element={isLoggedIn ? <PaymentPage /> : <Navigate to="/login" replace />} />
-  <Route path="/points" element={isLoggedIn ? <PointsPage /> : <Navigate to="/login" replace />} />
-  <Route path="/notices" element={isLoggedIn ? <NoticesPage /> : <Navigate to="/login" replace />} />
-  <Route path="/notices/:id" element={isLoggedIn ? <NoticeDetailPage /> : <Navigate to="/login" replace />} />
-  <Route path="/holidays" element={isLoggedIn ? <HolidaysPage /> : <Navigate to="/login" replace />} />
-</Routes>
 
+        <Routes>
+          <Route path="/login" element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
+          <Route path="/" element={
+            isLoggedIn ? <Navigate to="/notices" replace /> : <Navigate to="/login" replace />
+          } />
+          <Route path="/attendance" element={isLoggedIn ? <AttendancePage /> : <Navigate to="/login" replace />} />
+          <Route path="/payment" element={isLoggedIn ? <PaymentPage /> : <Navigate to="/login" replace />} />
+          <Route path="/points" element={isLoggedIn ? <PointsPage /> : <Navigate to="/login" replace />} />
+          <Route path="/notices" element={isLoggedIn ? <NoticesPage /> : <Navigate to="/login" replace />} />
+          <Route path="/notices/:id" element={isLoggedIn ? <NoticeDetailPage /> : <Navigate to="/login" replace />} />
+          <Route path="/holidays" element={isLoggedIn ? <HolidaysPage /> : <Navigate to="/login" replace />} />
+        </Routes>
       </div>
     </HashRouter>
   );

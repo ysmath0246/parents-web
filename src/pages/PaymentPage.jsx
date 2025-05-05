@@ -279,6 +279,37 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
 
 
 
+  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
+        <button
+          onClick={() => setCurrentRoutineIndex(prev => Math.max(prev - 1, 0))}
+          disabled={currentRoutineIndex === 0}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 4,
+            background: currentRoutineIndex === 0 ? "#ccc" : "#1565c0",
+            color: "white",
+            border: "none",
+            cursor: currentRoutineIndex === 0 ? "default" : "pointer"
+          }}
+        >
+          이전
+        </button>
+        <button
+          onClick={() => setCurrentRoutineIndex(prev => Math.min(prev + 1, routines.length - 1))}
+          disabled={currentRoutineIndex >= routines.length - 1}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 4,
+            background: currentRoutineIndex >= routines.length - 1 ? "#ccc" : "#1565c0",
+            color: "white",
+            border: "none",
+            cursor: currentRoutineIndex >= routines.length - 1 ? "default" : "pointer"
+          }}
+        >
+          다음
+        </button>
+      </div>      
+
       {/* 표 */}
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
         <thead>
@@ -316,37 +347,6 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
 </tbody>
 
       </table>
-
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-        <button
-          onClick={() => setCurrentRoutineIndex(prev => Math.max(prev - 1, 0))}
-          disabled={currentRoutineIndex === 0}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 4,
-            background: currentRoutineIndex === 0 ? "#ccc" : "#1565c0",
-            color: "white",
-            border: "none",
-            cursor: currentRoutineIndex === 0 ? "default" : "pointer"
-          }}
-        >
-          이전
-        </button>
-        <button
-          onClick={() => setCurrentRoutineIndex(prev => Math.min(prev + 1, routines.length - 1))}
-          disabled={currentRoutineIndex >= routines.length - 1}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 4,
-            background: currentRoutineIndex >= routines.length - 1 ? "#ccc" : "#1565c0",
-            color: "white",
-            border: "none",
-            cursor: currentRoutineIndex >= routines.length - 1 ? "default" : "pointer"
-          }}
-        >
-          다음
-        </button>
-      </div>      
 
 
 
