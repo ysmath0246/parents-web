@@ -175,92 +175,82 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
   const nextRoutineFirstDate = routines[currentRoutineIndex + 1]?.[0]?.date;
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: 16, textAlign: "center" }}>
-  
-  {/* 1️⃣ 👀 학생의 수업 루틴 */}
-  <h1 style={{ marginBottom: 16, fontSize: "20px" }}>
-    👀 {student.name}님의 수업 루틴 {routineNumber != null ? routineNumber : (currentRoutineIndex + 1)}
+    <div style={{ maxWidth: 600, margin: "0 auto", padding: 16 }}>
+  <h1 style={{ fontSize: 22, textAlign: "center", marginBottom: 16 }}>
+    👀 {student.name}님의 수업 루틴 {routineNumber}
   </h1>
 
-  {/* 2️⃣ 결제완료 상태 */}
-  <p style={{ fontSize: 18, marginBottom: 16 }}>
-    {paymentStatuses[routineNumber]
+  <p style={{ fontSize: 16, marginBottom: 8 }}>
+    {paymentStatuses[String(routineNumber)]
       ? "✅ 결제완료 되었습니다."
       : "⚠️ 아직 결제전입니다. 수업시작일 전에 결제 부탁드립니다."}
   </p>
-
-  {/* 3️⃣ 다음 결제일 안내 */}
-  <p style={{ fontSize: 16, marginBottom: 32 }}>
-    {nextRoutineFirstDate
-      ? `➡️ 다음 결제일: ${nextRoutineFirstDate} (수업시작일 전에 결제 부탁드립니다.)`
-      : "다음 루틴 시작일 정보를 불러오지 못했습니다."}
+  <p style={{ fontSize: 14, marginBottom: 16 }}>
+    ➡️ 다음 결제일: {nextPaymentDate} (수업시작일 전에 결제 부탁드립니다.)
   </p>
 
-  {/* 4️⃣ 결제 방법 선택 */}
-  <h3 style={{ fontWeight: "bold", marginBottom: 12 }}>결제 방법 선택</h3>
-  <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24 }}>
+  <h3 style={{ fontWeight: "bold", marginBottom: 8 }}>결제 방법 선택</h3>
+
+  {/* 버튼들을 가로로 꽉 붙여서 정렬 */}
+  <div style={{ display: "flex", gap: 4, marginBottom: 12, justifyContent: "center" }}>
     <button
       className="px-2 py-1 text-xs"
       onClick={() => handlePaymentSelect("계좌이체", routineNumber)}
       style={{
-        padding: "4px 8px",
+        flex: 1,
+        padding: 8,
         background: "#4caf50",
         color: "white",
         borderRadius: 4,
-        fontSize: "12px"
+        minWidth: 80,
       }}
     >
       계좌이체
     </button>
-
     <button
       className="px-2 py-1 text-xs"
       onClick={() => handlePaymentSelect("결제선생", routineNumber)}
       style={{
-        padding: "4px 8px",
+        flex: 1,
+        padding: 8,
         background: "#2196f3",
         color: "white",
         borderRadius: 4,
-        fontSize: "12px"
+        minWidth: 80,
       }}
     >
       결제선생
     </button>
-
     <button
       className="px-2 py-1 text-xs"
       onClick={() => handlePaymentSelect("카드", routineNumber)}
       style={{
-        padding: "4px 8px",
+        flex: 1,
+        padding: 8,
         background: "#f44336",
         color: "white",
         borderRadius: 4,
-        fontSize: "12px"
+        minWidth: 80,
       }}
     >
       카드
     </button>
   </div>
 
-  {/* 5️⃣ 현재 선택된 결제방법 + 화살표 내용 */}
-  <p style={{ fontSize: 16, marginBottom: 16 }}>
-    ✅ 현재 선택된 결제방법: {selectedPayments[routineNumber] || "없음"}
+  {/* 선택된 결제방법 + 내용 같은 줄에 */}
+  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, fontSize: 14 }}>
+    <span>✅ 현재 선택된 결제방법: {selectedPayments[routineNumber] || "없음"}</span>
     {selectedPayments[routineNumber] === "카드" && (
-      <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
-        ➡️ 마지막 수업일이나 다음 수업시작일 전에 보내주세요
-      </span>
+      <span>➡️ 마지막 수업일이나 다음 수업시작일 전에 보내주세요</span>
     )}
     {selectedPayments[routineNumber] === "결제선생" && (
-      <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
-        ➡️ 다음수업시작일 5일 전 보내드리겠습니다.
-      </span>
+      <span>➡️ 다음수업시작일 5일 전 보내드리겠습니다.</span>
     )}
     {selectedPayments[routineNumber] === "계좌이체" && (
-      <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
-        ➡️ 00000-000-카카오뱅크 ㅇㅇㅇ
-      </span>
+      <span>➡️ 00000-000-카카오뱅크 ㅇㅇㅇ</span>
     )}
-  </p>
+  </div>
+
 
 
 
