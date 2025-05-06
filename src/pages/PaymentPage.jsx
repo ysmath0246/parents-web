@@ -208,7 +208,7 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
    // flexWrap: "wrap"  // 너무 좁을 땐 알아서 줄바꿈되게 (안 넣어도 됨)
   }}
 >
-  <h3 style={{ fontWeight: "bold", margin: 0, fontSize: 16 }}>결제 방법 선택</h3>
+  <h3 style={{ fontWeight: "bold", margin: 0, fontSize: 16 }}>결제방법선택</h3>
 
   <button
     className="px-2 py-1 text-xs"
