@@ -189,12 +189,18 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
       : "⚠️ 아직 결제전입니다. 수업시작일 전에 결제 부탁드립니다."}
   </p>
 
-  {/* 3️⃣ 다음 결제일 안내 */}
-  <p style={{ fontSize: 16, marginBottom: 32 }}>
-    {nextRoutineFirstDate
-      ? `➡️ 다음 결제일: ${nextRoutineFirstDate} <br/>다음을 눌러 결제방법을 선택해 주세요. (수업시작일 전에 결제 부탁드립니다.)`
-      : "다음 루틴 시작일 정보를 불러오지 못했습니다."}
-  </p>
+ {/* 3️⃣ 다음 결제일 안내 */}
+<p style={{ fontSize: 16, marginBottom: 32 }}>
+  {nextRoutineFirstDate
+    ? <>
+        ➡️ 다음 결제일: {nextRoutineFirstDate}
+        <br/>
+        다음을 눌러 결제방법을 선택해 주세요. (수업시작일 전에 결제 부탁드립니다.)
+      </>
+    : "다음 루틴 시작일 정보를 불러오지 못했습니다."
+  }
+</p>
+
 
   {/* 4️⃣ 결제 방법 선택 */}
  {/* 4️⃣ 결제 방법 선택 + 버튼 한 줄에 */}
