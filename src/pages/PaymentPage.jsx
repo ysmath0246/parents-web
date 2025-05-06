@@ -192,7 +192,7 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
   {/* 3️⃣ 다음 결제일 안내 */}
   <p style={{ fontSize: 16, marginBottom: 32 }}>
     {nextRoutineFirstDate
-      ? `➡️ 다음 결제일: ${nextRoutineFirstDate} (수업시작일 전에 결제 부탁드립니다.)`
+      ? `➡️ 다음 결제일: ${nextRoutineFirstDate} <br/>다음을 눌러 결제방법을 선택해 주세요. (수업시작일 전에 결제 부탁드립니다.)`
       : "다음 루틴 시작일 정보를 불러오지 못했습니다."}
   </p>
 
@@ -267,12 +267,12 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
     )}
     {selectedPayments[routineNumber] === "결제선생" && (
       <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
-        ➡️ 다음수업시작일 5일 전 보내드리겠습니다.
+        ➡️ 수업시작일 5일 전 보내드리겠습니다.
       </span>
     )}
     {selectedPayments[routineNumber] === "계좌이체" && (
       <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
-        ➡️ 3333-31-6107963 카카오뱅크 *교재비계좌와 다릅니다
+        ➡️ 3333-31-6107963 카카오뱅크 *교재비계좌와 다릅니다)
       </span>
     )}
   </p>
