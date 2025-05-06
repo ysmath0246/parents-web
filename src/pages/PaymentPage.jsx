@@ -205,7 +205,7 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
     gap: 8,
     justifyContent: "center",
     marginBottom: 24,
-    flexWrap: "wrap"  // 너무 좁을 땐 알아서 줄바꿈되게 (안 넣어도 됨)
+   // flexWrap: "wrap"  // 너무 좁을 땐 알아서 줄바꿈되게 (안 넣어도 됨)
   }}
 >
   <h3 style={{ fontWeight: "bold", margin: 0, fontSize: 16 }}>결제 방법 선택</h3>
@@ -272,7 +272,7 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
     )}
     {selectedPayments[routineNumber] === "계좌이체" && (
       <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
-        ➡️ 00000-000-카카오뱅크 ㅇㅇㅇ
+        ➡️ 3333-31-6107963 카카오뱅크 *교재비계좌와 다릅니다
       </span>
     )}
   </p>
