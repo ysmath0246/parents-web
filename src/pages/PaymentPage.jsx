@@ -1,323 +1,263 @@
 // src/pages/PaymentPage.jsx
-import  { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useRef } from "react";
 import { db } from "../firebase";
 import {
   doc,
   setDoc,
-  getDoc,
   onSnapshot,
+  collection,
 } from "firebase/firestore";
-import { collection } from "firebase/firestore";
 
 export default function PaymentPage() {
+  // 학생 ID는 로컬스토리지에서 가져옵니다.
   const studentId = localStorage.getItem("studentId");
-  const [student, setStudent] = useState(null);
-  const [sessions, setSessions] = useState([]);
-  const [selectedPayment, setSelectedPayment] = useState("");
-  const [paymentComplete, setPaymentComplete] = useState(false);
-  const [currentRoutineIndex, setCurrentRoutineIndex] = useState(0);
-  const [selectedPayments, setSelectedPayments] = useState({});
-  const [paymentStatuses, setPaymentStatuses] = useState({});
+
+  // routines 구독 시, 최초 1회만 todayStr 기준으로 index 설정용 ref
+  const hasInitialized = useRef(false);
+
+  // 컴포넌트 상태
+  const [student, setStudent] = useState(null);            // 학생 정보
+  const [sessions, setSessions] = useState([]);            // 전체 lessons 배열
+  const [currentRoutineIndex, setCurrentRoutineIndex] = useState(0);  // 현재 보고 있는 루틴 인덱스
+  const [selectedPayments, setSelectedPayments] = useState({});       // 루틴별 선택된 결제방법
+  const [paymentStatuses, setPaymentStatuses] = useState({});         // 루틴별 결제완료 여부
+
+  // 지원하는 결제 방법 목록
   const paymentMethods = ["계좌이체", "결제선생", "카드"];
 
+  // 1) 학생 정보 실시간 구독 (PIN, schedules 등)
   useEffect(() => {
     if (!studentId) return;
-    const unsubStudent = onSnapshot(doc(db, "students", studentId), (docSnap) => {
-      if (docSnap.exists()) {
-        console.log("학생 정보 가져옴:", docSnap.data());
-        setStudent(docSnap.data());
-      } else {
-        console.log("학생 정보 없음");
-      }
-    });
-    return () => unsubStudent();
-  }, [studentId]);
-
-  
-  
-  // 기존 루틴별 결제 방법 가져오는 useEffect를 이렇게 개선
-  useEffect(() => {
-    if (!studentId) return;
-  
     const unsub = onSnapshot(
-      collection(db, "payments"),
-      (snapshot) => {
-        const updates = {};
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.studentId === studentId) {
-            updates[data.routineNumber] = data.paymentMethod;
-          }
-        });
-        setSelectedPayments(updates);
-      }
-    );
-  
-    return () => unsub();
-  }, [studentId]);
-  
-
-  useEffect(() => {
-    if (!studentId) return;
-  
-    const unsub = onSnapshot(
-      collection(db, "payment_completed"),
-      (snapshot) => {
-        const statuses = {};
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.studentId === studentId) {
-            statuses[String(data.routineNumber)] = data.paymentComplete;
-          }
-        });
-        setPaymentStatuses(statuses);  // 상태에 저장
-      }
-    );
-  
-    return () => unsub();
-  }, [studentId]);
-  
-
-  
-  useEffect(() => {
-    if (!studentId) return;
-
-    const unsubRoutine = onSnapshot(doc(db, "routines", studentId), (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        console.log("루틴 데이터:", data);  // ✅ 이거 확인
-        const lessons = data.lessons || [];
-        console.log("lessons 배열:", lessons);
-        setSessions(lessons);
-    
-        // ✅ 오늘 날짜가 포함된 루틴 찾기
-        const todayStr = new Date().toISOString().slice(0, 10); // '2025-05-04' 형태
-    
-        // 루틴 묶기
-        const routineMap = {};
-        lessons.forEach(item => {
-          const routineKey = item.routineNumber || 1;
-          if (!routineMap[routineKey]) routineMap[routineKey] = [];
-          routineMap[routineKey].push(item);
-        });
-        const routinesArray = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b[0].routineNumber);
-    
-        // 오늘 날짜가 포함된 루틴 인덱스 찾기
-        const foundIndex = routinesArray.findIndex(routine =>
-          routine.some(item => item.date === todayStr)
-        );
-    
-        if (foundIndex !== -1) {
-          setCurrentRoutineIndex(foundIndex);
-        } else {
-          console.log("루틴 문서 없음!");
-
-          // 오늘 포함된 루틴 없으면 기본 0
-          setCurrentRoutineIndex(0);
+      doc(db, "students", studentId),
+      (snap) => {
+        if (snap.exists()) {
+          setStudent({ id: snap.id, ...snap.data() });
         }
       }
-    });
-    
-    return () => {
-      unsubStudent();
-      unsubRoutine();
-    };
+    );
+    return () => unsub();
   }, [studentId]);
 
+  // 2) 루틴별 결제 방법 구독
   useEffect(() => {
-    console.log("sessions 변경됨:", sessions);
-  }, [sessions]);
-  
+    if (!studentId) return;
+    const unsub = onSnapshot(
+      collection(db, "payments"),
+      (qs) => {
+        const map = {};
+        qs.docs.forEach((d) => {
+          const data = d.data();
+          if (data.studentId === studentId) {
+            map[data.routineNumber] = data.paymentMethod;
+          }
+        });
+        setSelectedPayments(map);
+      }
+    );
+    return () => unsub();
+  }, [studentId]);
 
- const handlePaymentSelect = async (method, routineNum) => {
-    setSelectedPayments(prev => ({
+  // 3) 루틴별 결제 완료 상태 구독
+  useEffect(() => {
+    if (!studentId) return;
+    const unsub = onSnapshot(
+      collection(db, "payment_completed"),
+      (qs) => {
+        const map = {};
+        qs.docs.forEach((d) => {
+          const data = d.data();
+          if (data.studentId === studentId) {
+            map[String(data.routineNumber)] = data.paymentComplete;
+          }
+        });
+        setPaymentStatuses(map);
+      }
+    );
+    return () => unsub();
+  }, [studentId]);
+
+  // 4) 전체 루틴(lessons) 실시간 구독 + 최초 1회만 today 기준 루틴 인덱스 설정
+  useEffect(() => {
+    if (!studentId) return;
+
+    const unsubRoutine = onSnapshot(
+      doc(db, "routines", studentId),
+      (snap) => {
+        if (!snap.exists()) return;
+        const lessons = snap.data().lessons || [];
+        setSessions(lessons);
+
+        // 최초 1회만 오늘 날짜 기준으로 currentRoutineIndex 계산
+        if (!hasInitialized.current) {
+          hasInitialized.current = true;
+          const todayStr = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+
+          // routineNumber별로 lessons 그룹핑
+          const routineMap = {};
+          lessons.forEach((item) => {
+            const num = item.routineNumber || 1;
+            if (!routineMap[num]) routineMap[num] = [];
+            routineMap[num].push(item);
+          });
+
+          // 루틴 순서대로 배열화
+          const routinesArray = Object.values(routineMap).sort(
+            (a, b) => a[0].routineNumber - b[0].routineNumber
+          );
+
+          // 오늘 날짜가 속한 루틴 인덱스 찾기
+          const idx = routinesArray.findIndex((group) =>
+            group.some((l) => l.date === todayStr)
+          );
+          setCurrentRoutineIndex(idx >= 0 ? idx : 0);
+        }
+      }
+    );
+
+    return () => unsubRoutine();
+  }, [studentId]);
+
+  // 결제방법 선택 핸들러
+  const handlePaymentSelect = async (method, routineNum) => {
+    // UI 업데이트
+    setSelectedPayments((prev) => ({
       ...prev,
-      [routineNum]: method
+      [routineNum]: method,
     }));
 
-    if (studentId && routineNum) {
-      try {
-       await setDoc(doc(db, "payments", `${studentId}_routine_${routineNum}`), {
-  studentId,
-  routineNumber: routineNum,
-  paymentMethod: method,
-  paymentComplete: false,  // ✅ 초기엔 false로 저장
-  updatedAt: new Date().toISOString(),
-}, { merge: true });
+    // Firestore에 저장
+    await setDoc(
+      doc(db, "payments", `${studentId}_routine_${routineNum}`),
+      {
+        studentId,
+        routineNumber: routineNum,
+        paymentMethod: method,
+        paymentComplete: false,
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
+  };
 
-        console.log("✅ 결제방법 저장 완료 (루틴별): ", method, "(루틴:", routineNum, ")");
-      } catch (err) {
-        console.error("❌ 결제방법 저장 오류: ", err);
-      }
-    }
-};
-
-
+  // 로딩 상태
   if (!student) return <p>로딩 중…</p>;
 
-  const cycleSize = student.schedules?.length ? student.schedules.length * 4 : 8;
+  // sessions → routineNumber별 그룹핑
+  const routineGroups = {};
+  sessions.forEach((s) => {
+    const num = s.routineNumber || 1;
+    if (!routineGroups[num]) routineGroups[num] = [];
+    routineGroups[num].push(s);
+  });
+  const routinesArray = Object.values(routineGroups).sort(
+    (a, b) => a[0].routineNumber - b[0].routineNumber
+  );
 
-// 루틴별로 묶기 (routineNumber로 묶기)
-const routineMap = {};
-sessions.forEach(item => {
-  const routineKey = item.routineNumber || 1;  // 혹시 없으면 기본 1
-  if (!routineMap[routineKey]) routineMap[routineKey] = [];
-  routineMap[routineKey].push(item);
-});
-const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b[0].routineNumber);
+  // 현재 보고 있는 루틴과 루틴 번호
+  const currentRoutine = routinesArray[currentRoutineIndex] || [];
+  const routineNumber =
+    currentRoutine[0]?.routineNumber ?? currentRoutineIndex + 1;
 
-
-  const currentRoutine = routines[currentRoutineIndex] || [];
- // ✅ routineNumber 추출
- const routineNumber = currentRoutine.length > 0 ? currentRoutine[0].routineNumber : (currentRoutineIndex + 1);
-
-  // 다음 루틴의 첫 수업일 구하기
-  const nextRoutineFirstDate = routines[currentRoutineIndex + 1]?.[0]?.date;
+  // 다음 루틴 시작일
+  const nextRoutineFirstDate =
+    routinesArray[currentRoutineIndex + 1]?.[0]?.date;
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: 16, textAlign: "center" }}>
-  
-  {/* 1️⃣ 👀 학생의 수업 루틴 */}
-  <h1 style={{ marginBottom: 16, fontSize: "20px" }}>
-    👀 {student.name}님의 수업 루틴 {routineNumber != null ? routineNumber : (currentRoutineIndex + 1)}
-  </h1>
+      {/* 1️⃣ 학생 이름 + 루틴 번호 */}
+      <h1 style={{ fontSize: 20, marginBottom: 16 }}>
+        👀 {student.name}님의 수업 루틴 {routineNumber}회차
+      </h1>
 
-  {/* 2️⃣ 결제완료 상태 */}
-  <p style={{ fontSize: 18, marginBottom: 16 }}>
-  {paymentStatuses[String(routineNumber)]
-      ? "✅ 결제완료 되었습니다."
-      : "⚠️ 아직 결제전입니다. 수업시작일 전에 결제 부탁드립니다."}
-  </p>
+      {/* 2️⃣ 결제 완료 여부 */}
+      <p style={{ fontSize: 18, marginBottom: 16 }}>
+        {paymentStatuses[routineNumber]
+          ? "✅ 결제완료 되었습니다."
+          : "⚠️ 아직 결제전입니다. 수업시작일 전에 결제 부탁드립니다."}
+      </p>
 
- {/* 3️⃣ 다음 결제일 안내 */}
-<p style={{ fontSize: 16, marginBottom: 32 }}>
-  {nextRoutineFirstDate
-    ? <>
-        ➡️ 다음수업시작일: {nextRoutineFirstDate}
-        <br/>
-        다음을 눌러 결제방법을 선택해 주세요. (수업시작일 전에 결제 부탁드립니다.)
-      </>
-    : "다음 루틴 시작일 정보를 불러오지 못했습니다."
-  }
-</p>
+      {/* 3️⃣ 다음 루틴 안내 */}
+      <p style={{ fontSize: 16, marginBottom: 32 }}>
+        {nextRoutineFirstDate ? (
+          <>
+            ➡️ 다음수업시작일: {nextRoutineFirstDate}
+            <br />
+            아래에서 결제방법을 선택해주세요.
+          </>
+        ) : (
+          "다음 루틴 시작일 정보를 불러오지 못했습니다."
+        )}
+      </p>
 
+      {/* 4️⃣ 결제 방법 선택 버튼 */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        marginBottom: 24,
+      }}>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: "bold" }}>결제방법선택</h3>
+        {paymentMethods.map((m) => (
+          <button
+            key={m}
+            onClick={() => handlePaymentSelect(m, routineNumber)}
+            style={{
+              padding: "4px 8px",
+              background: m === "계좌이체" ? "#4caf50"
+                        : m === "결제선생" ? "#2196f3"
+                        : "#f44336",
+              color: "white",
+              borderRadius: 4,
+              minWidth: 80,
+            }}
+          >
+            {m}
+          </button>
+        ))}
+      </div>
 
-  {/* 4️⃣ 결제 방법 선택 */}
- {/* 4️⃣ 결제 방법 선택 + 버튼 한 줄에 */}
-<div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    justifyContent: "center",
-    marginBottom: 24,
-   // flexWrap: "wrap"  // 너무 좁을 땐 알아서 줄바꿈되게 (안 넣어도 됨)
-  }}
->
-  <h3 style={{ fontWeight: "bold", margin: 0, fontSize: 16 }}>결제방법선택</h3>
+      {/* 5️⃣ 현재 선택된 결제방법 */}
+      <p style={{ fontSize: 16, marginBottom: 16 }}>
+        ✅ 현재 선택된 결제방법: {selectedPayments[routineNumber] || "없음"}
+      </p>
 
-  <button
-    className="px-2 py-1 text-xs"
-    onClick={() => handlePaymentSelect("계좌이체", routineNumber)}
-    style={{
-      padding: "4px 8px",
-      background: "#4caf50",
-      color: "white",
-      borderRadius: 4,
-      fontSize: "12px",
-      minWidth: "80px",
-    }}
-  >
-    계좌이체
-  </button>
-
-  <button
-    className="px-2 py-1 text-xs"
-    onClick={() => handlePaymentSelect("결제선생", routineNumber)}
-    style={{
-      padding: "4px 8px",
-      background: "#2196f3",
-      color: "white",
-      borderRadius: 4,
-      fontSize: "12px",
-      minWidth: "80px",
-    }}
-  >
-    결제선생
-  </button>
-
-  <button
-    className="px-2 py-1 text-xs"
-    onClick={() => handlePaymentSelect("카드", routineNumber)}
-    style={{
-      padding: "4px 8px",
-      background: "#f44336",
-      color: "white",
-      borderRadius: 4,
-      fontSize: "12px",
-      minWidth: "80px",
-    }}
-  >
-    카드
-  </button>
-</div>
-
-
-  {/* 5️⃣ 현재 선택된 결제방법 + 화살표 내용 */}
-  <p style={{ fontSize: 16, marginBottom: 16 }}>
-    ✅ 현재 선택된 결제방법: {selectedPayments[routineNumber] || "없음"}
-    {selectedPayments[routineNumber] === "카드" && (
-      <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
-        ➡️ 마지막 수업일이나 다음 수업시작일 전에 보내주세요
-      </span>
-    )}
-    {selectedPayments[routineNumber] === "결제선생" && (
-      <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
-        ➡️ 수업시작일 5일 전 보내드리겠습니다.
-      </span>
-    )}
-    {selectedPayments[routineNumber] === "계좌이체" && (
-      <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
-        ➡️ 3333-31-6107963 카카오뱅크 *교재비계좌와 다릅니다)
-      </span>
-    )}
-  </p>
-
-
-
-  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
+      {/* ◀ 이전 / 다음 버튼 */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
         <button
-          onClick={() => setCurrentRoutineIndex(prev => Math.max(prev - 1, 0))}
+          onClick={() => setCurrentRoutineIndex((i) => Math.max(i - 1, 0))}
           disabled={currentRoutineIndex === 0}
           style={{
             padding: "8px 16px",
-            borderRadius: 4,
             background: currentRoutineIndex === 0 ? "#ccc" : "#1565c0",
             color: "white",
             border: "none",
-            cursor: currentRoutineIndex === 0 ? "default" : "pointer"
+            borderRadius: 4,
+            cursor: currentRoutineIndex === 0 ? "default" : "pointer",
           }}
         >
           이전
         </button>
         <button
-          onClick={() => setCurrentRoutineIndex(prev => Math.min(prev + 1, routines.length - 1))}
-          disabled={currentRoutineIndex >= routines.length - 1}
+          onClick={() => setCurrentRoutineIndex((i) => Math.min(i + 1, routinesArray.length - 1))}
+          disabled={currentRoutineIndex >= routinesArray.length - 1}
           style={{
             padding: "8px 16px",
-            borderRadius: 4,
-            background: currentRoutineIndex >= routines.length - 1 ? "#ccc" : "#1565c0",
+            background: currentRoutineIndex >= routinesArray.length - 1 ? "#ccc" : "#1565c0",
             color: "white",
             border: "none",
-            cursor: currentRoutineIndex >= routines.length - 1 ? "default" : "pointer"
+            borderRadius: 4,
+            cursor: currentRoutineIndex >= routinesArray.length - 1 ? "default" : "pointer",
           }}
         >
           다음
         </button>
-      </div>      
+      </div>
 
-      {/* 표 */}
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
+      {/* 6️⃣ 현재 루틴의 상세 테이블 */}
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
             <th style={{ border: "1px solid #ccc", padding: 8 }}>회차</th>
@@ -327,41 +267,35 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
           </tr>
         </thead>
         <tbody>
-  {currentRoutine.map((s, idx) => (
-    <tr key={idx}>
-      <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>{s.session}</td>
-      <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>
-        {s.makeupDate ? (
-          <div>
-            <s>{s.date}</s> ➔ <span>{s.makeupDate}</span>
-          </div>
-        ) : (
-          s.date
-        )}
-      </td>
-      <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>{s.status}</td>
-      <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>{s.time || "-"}</td>
-    </tr>
-  ))}
-  {currentRoutine.length === 0 && (
-    <tr>
-      <td colSpan={4} style={{ textAlign: "center", padding: 16, color: "#888" }}>
-        루틴 데이터가 없습니다.
-      </td>
-    </tr>
-  )}
-</tbody>
-
+          {currentRoutine.map((s, idx) => (
+            <tr key={idx}>
+              <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>
+                {s.session}
+              </td>
+              <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>
+                {s.makeupDate ? (
+                  <span><s>{s.date}</s> ➔ {s.makeupDate}</span>
+                ) : (
+                  s.date
+                )}
+              </td>
+              <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>
+                {s.status}
+              </td>
+              <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>
+                {s.time || "-"}
+              </td>
+            </tr>
+          ))}
+          {currentRoutine.length === 0 && (
+            <tr>
+              <td colSpan={4} style={{ padding: 16, textAlign: "center", color: "#888" }}>
+                루틴 정보가 없습니다.
+              </td>
+            </tr>
+          )}
+        </tbody>
       </table>
-
-
-
-
-
-
-      
-
-      
     </div>
   );
 }
