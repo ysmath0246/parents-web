@@ -193,7 +193,7 @@ const routines = Object.values(routineMap).sort((a, b) => a[0].routineNumber - b
 <p style={{ fontSize: 16, marginBottom: 32 }}>
   {nextRoutineFirstDate
     ? <>
-        ➡️ 다음 결제일: {nextRoutineFirstDate}
+        ➡️ 다음수업시작일: {nextRoutineFirstDate}
         <br/>
         다음을 눌러 결제방법을 선택해 주세요. (수업시작일 전에 결제 부탁드립니다.)
       </>
