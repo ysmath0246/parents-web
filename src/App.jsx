@@ -69,21 +69,75 @@ function AppContent() {
   return (
     <div>
       {isLoggedIn && (
-        <nav style={{ padding: 10, textAlign: "center" }}>
+      <nav
+        style={{
+          position: "sticky",
+          top: 0,
+          backgroundColor: "#fff",
+          padding: "8px 0",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          zIndex: 1000,
+          textAlign: "center",
+        }}
+      >
           <NavLink to="/attendance" style={{ marginRight: 10 }}>달력/출석</NavLink>
           <NavLink to="/payment" style={{ marginRight: 10 }}>수업/결제</NavLink>
           <NavLink to="/points" style={{ marginRight: 10 }}>포인트</NavLink>
           <NavLink to="/notices" style={{ marginRight: 10 }}>공지사항</NavLink>
           <NavLink to="/holidays" style={{ marginRight: 10 }}>휴일</NavLink>
 
-          <button onClick={() => setShowChangePw(true)} style={{ marginLeft: 10 }}>
+
+
+                 {/* NavLink 스타일링 (active 시 강조) */}
+        {[ "/attendance","/payment","/points","/notices","/holidays" ].map((path, i) => (
+          <NavLink
+            key={path}
+            to={path}
+            style={({ isActive }) => ({
+              margin: "0 8px",
+              padding: "6px 12px",
+              borderRadius: 4,
+              textDecoration: "none",
+              fontWeight: isActive ? "bold" : "normal",
+              color: isActive ? "#fff" : "#333",
+              backgroundColor: isActive ? "#007bff" : "transparent",
+            })}
+          >
+            {{
+              "/attendance": "달력/출석",
+              "/payment":    "수업/결제",
+              "/points":     "포인트",
+              "/notices":    "공지사항",
+              "/holidays":   "휴일",
+            }[path]}
+          </NavLink>
+        ))}
+
+
+
+          <button  onClick={() => setShowChangePw(true)}
+          style={{
+            marginLeft: 20,
+            padding: "6px 12px",
+            border: "none",
+            borderRadius: 4,
+            backgroundColor: "#f0f0f0",
+            cursor: "pointer",
+          }}>
             PIN 변경
           </button>
           <button onClick={() => {
             localStorage.clear();
             setIsLoggedIn(false);
             window.location.hash = "#/login";
-          }} style={{ marginLeft: 10 }}>
+          }} style={{
+                        marginLeft: 8,
+                        padding: "6px 12px",
+                        border: "none",
+                        borderRadius: 4,
+                        backgroundColor: "#f0f0f0",
+                        cursor: "pointer",
+                      }}>
             로그아웃
           </button>
 

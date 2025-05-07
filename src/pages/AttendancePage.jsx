@@ -131,7 +131,9 @@ export default function AttendancePage() {
   return (
     <div style={{ maxWidth: 600, margin: "40px auto", textAlign: "center" , fontSize: "18px"}}>
         <h1 style={{ fontSize: "24px" }}>📅 출석 확인 </h1>
-      <Calendar
+        <Calendar
+        // 달력 전체를 부모의 textAlign:center 에 맞춰 중앙에 배치
+        style={{ display: "block", margin: "0 auto" }}
         tileContent={({ date, view }) => {
           if (view !== "month") return null;
           const d = format(date, "yyyy-MM-dd");
