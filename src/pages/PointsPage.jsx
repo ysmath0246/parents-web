@@ -16,86 +16,128 @@ export default function PointsPage() {
   const [me, setMe] = useState(null);
   const [allStudents, setAllStudents] = useState([]);
 
-  // 1) 내 정보 가져오기
+  // 포인트 항목 리스트 (students 컬렉션 내 points 객체 키 기준)
+  const [fields, setFields] = useState([]);
+
+  // 내 정보 구독
   useEffect(() => {
     if (!studentId) return;
     const unsub = onSnapshot(
       doc(db, "students", studentId),
-      (snap) => {
+      snap => {
         if (snap.exists()) {
-          setMe({ id: snap.id, ...snap.data() });
+          const data = { id: snap.id, ...snap.data() };
+          setMe(data);
+          if (data.points) {
+            setFields(Object.keys(data.points));
+          }
         }
       }
     );
     return () => unsub();
   }, [studentId]);
 
-  // 2) 전체 학생 정보 가져오기 (랭킹용)
+  // 전체 학생 구독
   useEffect(() => {
     const unsub = onSnapshot(
       collection(db, "students"),
-      (snapshot) => {
-        const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      snapshot => {
+        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         setAllStudents(list);
       }
     );
     return () => unsub();
   }, []);
 
-  // 3) 랭킹 계산 (총포인트 내림차순 Top5)
-  const ranking = allStudents
-    .map(stu => ({
-      name: stu.name,
-      total: Object.values(stu.points || {}).reduce((sum, v) => sum + (v || 0), 0)
-    }))
+  if (!me) return <p>로딩 중…</p>;
+
+  // 내 총 포인트
+  const myTotal = fields.reduce((sum, f) => sum + (me.points[f] || 0), 0);
+
+  // 전체 랭킹 (총합)
+  const overallRanking = allStudents
+    .map(s => ({ name: s.name, total: fields.reduce((t, f) => t + (s.points?.[f] || 0), 0) }))
     .sort((a, b) => b.total - a.total)
     .slice(0, 5);
 
-  if (!me) return <p>로딩 중…</p>;
+  // 항목별 랭킹 계산 (Top5)
+  const categoryRankings = {}
+  fields.forEach(field => {
+    categoryRankings[field] = [...allStudents]
+      .map(s => ({ name: s.name, value: s.points?.[field] || 0 }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  });
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: 16, textAlign: "center" }}>
       <h1 style={{ fontSize: "24px" }}>📖 포인트 관리</h1>
 
-      {/* —————————— 내 포인트 테이블 —————————— */}
-      <h2 style={{ margin: "16px 0" }}>💡 내 포인트</h2>
+      {/* 내 포인트 및 총합 */}
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: 16, marginTop: 16 }}>
+        <h2 style={{ margin: 0 }}>💡 내 포인트</h2>
+        <span style={{ fontSize: 18, fontWeight: "bold" }}>총 포인트: {myTotal}pt</span>
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
-            {Object.keys(me.points || {}).map(key => (
-              <TableHead key={key}>{key}</TableHead>
-            ))}
+            {fields.map(f => <TableHead key={f}>{f}</TableHead>)}
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow>
-            {Object.entries(me.points || {}).map(([field, value]) => (
-              <TableCell key={field}>{value}</TableCell>
-            ))}
+            {fields.map(f => <TableCell key={f}>{me.points[f] || 0}</TableCell>)}
           </TableRow>
         </TableBody>
       </Table>
 
-      {/* —————————— 전체 랭킹 테이블 —————————— */}
+      {/* 전체 랭킹 */}
       <h2 style={{ margin: "32px 0 16px" }}>🏆 전체 랭킹 (Top 5)</h2>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>순위</TableHead>
             <TableHead>학생 이름</TableHead>
-            <TableHead>총 포인트</TableHead>
+            <TableHead>총합</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {ranking.map((item, idx) => (
+          {overallRanking.map((item, i) => (
             <TableRow key={item.name}>
-              <TableCell>{idx + 1}</TableCell>
+              <TableCell>{i + 1}</TableCell>
               <TableCell>{item.name}</TableCell>
               <TableCell>{item.total}</TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      {/* 항목별 랭킹 */}
+      <h2 style={{ margin: "32px 0 16px" }}>📊 항목별 랭킹 (Top 5)</h2>
+      {fields.map(field => (
+        <div key={field} style={{ marginBottom: 24 }}>
+          <h3 style={{ margin: "8px 0" }}>{field} TOP 5</h3>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>순위</TableHead>
+                <TableHead>학생 이름</TableHead>
+                <TableHead>{field}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {categoryRankings[field].map((entry, idx) => (
+                <TableRow key={field + entry.name}>
+                  <TableCell>{idx + 1}</TableCell>
+                  <TableCell>{entry.name}</TableCell>
+                  <TableCell>{entry.value}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ))}
     </div>
   );
 }
