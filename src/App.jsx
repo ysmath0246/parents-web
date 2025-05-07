@@ -69,23 +69,34 @@ function AppContent() {
   return (
     <div>
       {isLoggedIn && (
-      <nav
-        style={{
-          position: "sticky",
-          top: 0,
-          backgroundColor: "#fff",
-          padding: "8px 0",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          zIndex: 1000,
-          textAlign: "center",
-        }}
-      >
-          <NavLink to="/attendance" style={{ marginRight: 10 }}>달력/출석</NavLink>
-          <NavLink to="/payment" style={{ marginRight: 10 }}>수업/결제</NavLink>
-          <NavLink to="/points" style={{ marginRight: 10 }}>포인트</NavLink>
-          <NavLink to="/notices" style={{ marginRight: 10 }}>공지사항</NavLink>
-          <NavLink to="/holidays" style={{ marginRight: 10 }}>휴일</NavLink>
-
+     // <nav 
+       // style={{
+         // position: "sticky",
+         // top: 0,
+         // backgroundColor: "#fff",
+         // padding: "8px 0",
+         // boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+         // zIndex: 1000,
+         // textAlign: "center",
+       // }}
+     // >
+       //   <NavLink to="/attendance" style={{ marginRight: 10 }}>달력/출석</NavLink>
+         // <NavLink to="/payment" style={{ marginRight: 10 }}>수업/결제</NavLink>
+       //   <NavLink to="/points" style={{ marginRight: 10 }}>포인트</NavLink>
+       //   <NavLink to="/notices" style={{ marginRight: 10 }}>공지사항</NavLink>
+       //   <NavLink to="/holidays" style={{ marginRight: 10 }}>휴일</NavLink>
+<nav
+    style={{
+      position: "sticky",
+      top: 0,
+      backgroundColor: "#fff",
+      padding: "8px 0",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      zIndex: 1000,
+      textAlign: "center",
+    }}
+  >
+    {/* 삭제한 하드코딩 NavLink 대신, 이 map 만 남겨둡니다 */}
 
 
                  {/* NavLink 스타일링 (active 시 강조) */}
