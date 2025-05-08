@@ -184,7 +184,7 @@ export default function PaymentPage() {
           <>
             ➡️ 다음수업시작일: {nextRoutineFirstDate}
             <br />
-            아래에서 결제방법을 선택해주세요.
+            다음 루틴 결제방법은 다음을 누르고 선택해주세요.
           </>
         ) : (
           "다음 루틴 시작일 정보를 불러오지 못했습니다."
@@ -219,10 +219,26 @@ export default function PaymentPage() {
         ))}
       </div>
 
-      {/* 5️⃣ 현재 선택된 결제방법 */}
-      <p style={{ fontSize: 16, marginBottom: 16 }}>
-        ✅ 현재 선택된 결제방법: {selectedPayments[routineNumber] || "없음"}
-      </p>
+     
+  {/* 5️⃣ 현재 선택된 결제방법 + 화살표 내용 */}
+  <p style={{ fontSize: 16, marginBottom: 16 }}>
+    ✅ 현재 선택된 결제방법: {selectedPayments[routineNumber] || "없음"}
+    {selectedPayments[routineNumber] === "카드" && (
+      <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
+        ➡️ 마지막 수업일이나 다음 수업시작일 전에 보내주세요
+      </span>
+    )}
+    {selectedPayments[routineNumber] === "결제선생" && (
+      <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
+        ➡️ 다음수업시작일 5일 전 보내드리겠습니다.
+      </span>
+    )}
+    {selectedPayments[routineNumber] === "계좌이체" && (
+      <span style={{ display: "block", marginTop: 8, fontSize: 14, color: "#555" }}>
+        ➡️ 3333-31-6107963 카카오뱅크 *교재비계좌와 다릅니다
+      </span>
+    )}
+  </p>
 
       {/* ◀ 이전 / 다음 버튼 */}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
