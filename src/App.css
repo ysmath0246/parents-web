@@ -78,3 +78,33 @@
   border-radius: 50%;
 }
 
+/* 모든 페이지 공통 컨테이너 */
+.container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+/* 포인트페이지는 max-width 다르게 필요 시 별도 지정 */
+.container-wide {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table-responsive table {
+  width: 100%;
+  min-width: 500px;
+  border-collapse: collapse;
+}

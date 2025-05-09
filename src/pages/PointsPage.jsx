@@ -70,7 +70,7 @@ export default function PointsPage() {
   });
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: 16, textAlign: "center" }}>
+    <div className="container-wide" style={{ textAlign: "center" }}>
       <h1 style={{ fontSize: "24px" }}>📖 포인트 관리</h1>
 
       {/* 내 포인트 및 총합 */}

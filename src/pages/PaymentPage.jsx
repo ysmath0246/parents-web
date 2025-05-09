@@ -165,7 +165,7 @@ export default function PaymentPage() {
     routinesArray[currentRoutineIndex + 1]?.[0]?.date;
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: 16, textAlign: "center" }}>
+    <div className="container-wide" style={{ textAlign: "center" }}>
       {/* 1️⃣ 학생 이름 + 루틴 번호 */}
       <h1 style={{ fontSize: 20, marginBottom: 16 }}>
         👀 {student.name}님의 수업 루틴 {routineNumber}회차

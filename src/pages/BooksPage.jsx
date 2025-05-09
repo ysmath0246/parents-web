@@ -34,8 +34,8 @@ export default function BooksPage() {
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: "40px auto", textAlign: "center", fontSize: "18px" }}>
-      <h1 style={{ fontSize: "24px", marginBottom: "20px" }}>📚 문제집 관리</h1>
+<div className="table-responsive">
+        <h1 style={{ fontSize: "24px", marginBottom: "20px" }}>📚 문제집 관리</h1>
 
       <button
         onClick={handleDownload}
