@@ -91,8 +91,8 @@ function AppContent() {
               })}
             >
               {{
-                "/attendance": "달력/출석",
-                "/payment": "수업/결제",
+                "/attendance": "출석",
+                "/payment": "결제",
                 "/notices": "공지사항",
                 "/myclass": "내아이수업현황",
               }[path]}
