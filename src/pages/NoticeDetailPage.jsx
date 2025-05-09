@@ -18,7 +18,7 @@ export default function NoticeDetailPage() {
   if (!notice) return <p>공지사항을 불러오는 중…</p>;
 
   return (
-    <div style={{ maxWidth: 600, margin: "0 auto", padding: 16 }}>
+    <div className="container">
       <h1>{notice.title}</h1>
       <p><strong>날짜:</strong> {notice.date}</p>
       <div style={{ whiteSpace: "pre-wrap", marginTop: 12 }}>

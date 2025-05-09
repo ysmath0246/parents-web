@@ -34,7 +34,7 @@ export default function BooksPage() {
   };
 
   return (
-<div className="table-responsive">
+<div className="container">
         <h1 style={{ fontSize: "24px", marginBottom: "20px" }}>📚 문제집 관리</h1>
 
       <button

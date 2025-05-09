@@ -14,7 +14,7 @@ export default function HolidaysPage() {
   }, []);
 
   return (
-    <div style={{ maxWidth: 400, margin: "0 auto", padding: 16 }}>
+    <div className="container">
         <h1 style={{ fontSize: "24px" }}>😍 휴일 목록 🤩 </h1>
       <ul>
         {holidays.map(h => (

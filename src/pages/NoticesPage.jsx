@@ -50,7 +50,7 @@ export default function NoticesPage() {
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: "0 auto", padding: 16 }}>
+    <div className="container">
       {/* ✅ 이번 달 휴일 표시 */}
       <div style={{ background: "#f9f9f9", padding: "12px", borderRadius: "8px", marginBottom: "16px" }}>
         <h2 style={{ fontSize: "18px", marginBottom: "8px" }}>📅 이번 달 휴일</h2>

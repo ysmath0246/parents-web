@@ -86,6 +86,10 @@
   padding: 16px;
   box-sizing: border-box;
   overflow-x: auto;
+  min-height: 100vh;             /* ⭐ 항상 화면 전체 높이 확보 */
+  display: flex;                  /* ⭐ 플렉스박스 */
+  flex-direction: column;         /* ⭐ 세로 배치 */
+  justify-content: flex-start;    /* ⭐ 위쪽부터 시작 */
 }
 
 /* 포인트페이지는 max-width 다르게 필요 시 별도 지정 */

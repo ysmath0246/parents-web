@@ -57,8 +57,8 @@ export default function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div style={{ maxWidth: 320, margin: "100px auto", textAlign: "center" }}>
-        <h1 style={{ fontSize: "24px" }}>학부모 로그인</h1>
+<div className="container" style={{ textAlign: "center" }}>
+<h1 style={{ fontSize: "24px" }}>학부모 로그인</h1>
       <input
         style={{ width: "100%", padding: 8, margin: "8px 0" }}
         value={birthId}
