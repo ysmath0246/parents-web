@@ -40,11 +40,19 @@ export default function LoginPage({ onLoginSuccess }) {
         localStorage.setItem("studentId", studentId);
         localStorage.setItem("studentName", data.name);
 
-        // ✅ 로그인 기록 저장 (학생 이름만)
-        await addDoc(collection(db, "parentLogins"), {
-          studentName: data.name,
-          loginTime: new Date().toISOString()
-        });
+        // 🔍 확인용 로그 + 알림
+        alert("로그인 성공: " + data.name);
+        console.log("✔ 로그인 성공:", data.name);
+
+        try {
+          await addDoc(collection(db, "parentLogins"), {
+            studentName: data.name,
+            loginTime: new Date().toISOString()
+          });
+          
+        } catch (err) {
+         
+        }
 
         if (onLoginSuccess) onLoginSuccess();
         navigate("/attendance");
@@ -53,7 +61,7 @@ export default function LoginPage({ onLoginSuccess }) {
         setError("아이디 또는 비밀번호가 일치하지 않습니다.");
       }
     } catch (e) {
-      console.error(e);
+      
       setError("로그인 중 오류가 발생했습니다.");
     }
   };
