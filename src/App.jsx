@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom';
 import { db } from "./firebase";
 import { doc, updateDoc } from "firebase/firestore";
+import { getDocs, collection } from "firebase/firestore";
 
 import LoginPage from "./pages/LoginPage.jsx";
 import AttendancePage from "./pages/AttendancePage.jsx";
@@ -61,6 +62,37 @@ function AppContent() {
       alert("PIN 변경 중 오류가 발생했습니다.");
     }
   }
+const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
+
+useEffect(() => {
+  const studentId = localStorage.getItem("studentId");
+  if (!studentId) return;
+
+  const checkNewItems = async () => {
+    const today = new Date();
+    const cutoff = new Date();
+    cutoff.setDate(today.getDate() - 3); // 최근 3일 이내 기준
+
+    const commentsSnap = await getDocs(collection(db, "comments"));
+    const booksSnap = await getDocs(collection(db, "books"));
+
+    const recentComment = commentsSnap.docs.some(doc => {
+      const data = doc.data();
+      return data.studentId === studentId &&
+             new Date(data.createdAt || data.date) >= cutoff;
+    });
+
+    const recentBook = booksSnap.docs.some(doc => {
+      const data = doc.data();
+      return data.studentId === studentId &&
+             new Date(data.createdAt || data.completedDate) >= cutoff;
+    });
+
+    setHasNewCommentOrBook(recentComment || recentBook);
+  };
+
+  checkNewItems();
+}, []);
 
   return (
     <div>
@@ -76,28 +108,55 @@ function AppContent() {
             textAlign: "center",
           }}
         >
-          {[ "/attendance", "/payment", "/notices", "/myclass" ].map((path) => (
-            <NavLink
-              key={path}
-              to={path}
-              style={({ isActive }) => ({
-                margin: "0 8px",
-                padding: "6px 12px",
-                borderRadius: 4,
-                textDecoration: "none",
-                fontWeight: isActive ? "bold" : "normal",
-                color: isActive ? "#fff" : "#333",
-                backgroundColor: isActive ? "#007bff" : "transparent",
-              })}
-            >
-              {{
-                "/attendance": "출석",
-                "/payment": "결제",
-                "/notices": "공지사항",
-                "/myclass": "내아이수업현황",
-              }[path]}
-            </NavLink>
-          ))}
+        {[ "/attendance", "/payment", "/notices", "/myclass" ].map((path) => (
+  <NavLink
+    key={path}
+    to={path}
+    style={({ isActive }) => ({
+      margin: "0 8px",
+      padding: "6px 12px",
+      borderRadius: 4,
+      textDecoration: "none",
+      fontWeight: isActive ? "bold" : "normal",
+      color: isActive ? "#fff" : "#333",
+      backgroundColor: isActive ? "#007bff" : "transparent",
+      position: "relative",
+      display: "inline-block"
+    })}
+  >
+    {{
+      "/attendance": "출석",
+      "/payment": "결제",
+      "/notices": "공지사항",
+      "/myclass": (
+        <>
+          내아이수업현황
+          {hasNewCommentOrBook && (
+           <span className="pulse wiggle"
+  style={{
+    position: "absolute",
+    top: -8,
+    right: -12,
+    backgroundColor: "red",
+    color: "white",
+    borderRadius: "12px",
+    padding: "2px 6px",
+    fontSize: "10px",
+    fontWeight: "bold",
+    fontFamily: "'Segoe UI', 'Apple SD Gothic Neo', sans-serif",
+  }}
+>
+  🔥 새글
+</span>
+
+          )}
+        </>
+      ),
+    }[path]}
+  </NavLink>
+))}
+
+
 
           <button
             onClick={() => setShowChangePw(true)}

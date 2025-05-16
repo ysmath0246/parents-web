@@ -1,6 +1,6 @@
 // src/pages/LoginPage.jsx
 import { useState } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 
@@ -19,32 +19,34 @@ export default function LoginPage({ onLoginSuccess }) {
     try {
       const q = query(
         collection(db, "students"),
-        where("birth", ">=", ""),
+        where("birth", ">=", "")
       );
       const snap = await getDocs(q);
 
       const matchedStudent = snap.docs.find(docSnap => {
         const data = docSnap.data();
-        const studentBirth = data.birth?.replace(/[^0-9]/g, ""); // 숫자만 추출
-        const parentPhone = data.parentPhone?.replace(/[^0-9]/g, ""); // 숫자만 추출
-
+        const studentBirth = data.birth?.replace(/[^0-9]/g, "");
+        const parentPhone = data.parentPhone?.replace(/[^0-9]/g, "");
         const idMatch = studentBirth?.slice(-6) === birthId.trim();
         const expectedPin = parentPhone ? parentPhone.slice(-4) : null;
         const pinMatch = expectedPin === pin.trim();
-
         return idMatch && pinMatch;
       });
 
       if (matchedStudent) {
         const data = matchedStudent.data();
-        localStorage.setItem("studentId", matchedStudent.id);
+        const studentId = matchedStudent.id;
+
+        localStorage.setItem("studentId", studentId);
         localStorage.setItem("studentName", data.name);
 
-        if (onLoginSuccess) {
-          onLoginSuccess();  // ✅ 로그인 성공 시 상태 업데이트 호출
-        }
+        // ✅ 로그인 기록 저장 (학생 이름만)
+        await addDoc(collection(db, "parentLogins"), {
+          studentName: data.name,
+          loginTime: new Date().toISOString()
+        });
 
-        
+        if (onLoginSuccess) onLoginSuccess();
         navigate("/attendance");
 
       } else {
@@ -57,8 +59,8 @@ export default function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-<div className="container" style={{ textAlign: "center" }}>
-<h1 style={{ fontSize: "24px" }}>학부모 로그인</h1>
+    <div className="container" style={{ textAlign: "center" }}>
+      <h1 style={{ fontSize: "24px" }}>학부모 로그인</h1>
       <input
         style={{ width: "100%", padding: 8, margin: "8px 0" }}
         value={birthId}
