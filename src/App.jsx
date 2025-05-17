@@ -46,24 +46,7 @@ function AppContent() {
     setIsLoggedIn(Boolean(localStorage.getItem("studentId")));
   }, [location]);
 
-  async function handlePasswordChange() {
-    const studentId = localStorage.getItem("studentId");
-    if (!studentId || newPw.length !== 4) {
-      alert("PIN은 4자리 숫자로 입력해야 합니다.");
-      return;
-    }
-    try {
-      await updateDoc(doc(db, "students", studentId), { pin: newPw });
-      alert("PIN이 성공적으로 변경되었습니다.");
-      setShowChangePw(false);
-      setNewPw("");
-    } catch (e) {
-      console.error(e);
-      alert("PIN 변경 중 오류가 발생했습니다.");
-    }
-  }
-const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
-
+ 
 useEffect(() => {
   const studentId = localStorage.getItem("studentId");
   if (!studentId) return;
@@ -93,6 +76,51 @@ useEffect(() => {
 
   checkNewItems();
 }, []);
+  // ✅ 자동 로그아웃 타이머
+  useEffect(() => {
+    let timer;
+
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        localStorage.clear();
+        setIsLoggedIn(false);
+        window.location.hash = "#/login";
+        alert("1시간 동안 활동이 없어 자동 로그아웃되었습니다.");
+      }, 60 * 60 * 1000); // 1시간 = 3600000ms
+    };
+
+    if (isLoggedIn) {
+      const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+      events.forEach(event => window.addEventListener(event, resetTimer));
+      resetTimer();
+
+      return () => {
+        clearTimeout(timer);
+        events.forEach(event => window.removeEventListener(event, resetTimer));
+      };
+    }
+  }, [isLoggedIn]);
+
+ async function handlePasswordChange() {
+    const studentId = localStorage.getItem("studentId");
+    if (!studentId || newPw.length !== 4) {
+      alert("PIN은 4자리 숫자로 입력해야 합니다.");
+      return;
+    }
+    try {
+      await updateDoc(doc(db, "students", studentId), { pin: newPw });
+      alert("PIN이 성공적으로 변경되었습니다.");
+      setShowChangePw(false);
+      setNewPw("");
+    } catch (e) {
+      console.error(e);
+      alert("PIN 변경 중 오류가 발생했습니다.");
+    }
+  }
+const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
+
+
 
   return (
     <div>
