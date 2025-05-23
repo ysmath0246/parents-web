@@ -18,14 +18,25 @@ export default function NoticesPage() {
       })));
     })();
 
-    (async () => {
+      (async () => {
       const snap = await getDocs(collection(db, "holidays"));
       const now = new Date();
-      const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`; // "YYYY-MM"
-      setHolidays(
+
+      // 🟢 이번 달, 이전 달, 다음 달 YYYY-MM 문자열 배열 생성
+      const fmt = (date) =>
+        `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      const thisMonth = fmt(now);
+      const prevMonth = fmt(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+      const nextMonth = fmt(new Date(now.getFullYear(), now.getMonth() + 1, 1));
+      const months = [prevMonth, thisMonth, nextMonth];
+
+        setHolidays(
         snap.docs
           .map((d) => ({ id: d.id, ...d.data() }))
-          .filter((h) => h.date.startsWith(thisMonth))
+          // 🟢 세 달치만 필터링
+          .filter((h) => months.some((m) => h.date.startsWith(m)))
+          // 🟢 날짜(문자열 YYYY-MM-DD) 기준 오름차순 정렬
+          .sort((a, b) => a.date.localeCompare(b.date))
       );
     })();
   }, []);
@@ -85,9 +96,15 @@ export default function NoticesPage() {
               {n.title} ({n.date})
             </div>
             {expandedId === n.id && (
-              <div style={{ marginTop: 8, whiteSpace: "pre-wrap" }}>
-                {noticeDetails[n.id] || "불러오는 중..."}
-              </div>
+               <div style={{ marginTop: 8 }}>
+               {noticeDetails[n.id] ? (
+                 <div
+                   dangerouslySetInnerHTML={{ __html: noticeDetails[n.id] }}
+                 />
+               ) : (
+                 "불러오는 중..."
+               )}
+             </div>
             )}
           </li>
         ))}
