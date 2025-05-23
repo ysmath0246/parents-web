@@ -255,27 +255,37 @@ const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
         </nav>
       )}
 
-      <Routes>
-  {/* 빈 경로(/)와 / 모두를 잡아 주는 명시적 루트 */}
-  <Route 
-    path="/" 
+     
+ <Routes>
+  {/* ① 빈 경로 → 로그인/공지로 분기 */}
+  <Route
+    index
     element={
-      isLoggedIn 
-        ? <Navigate to="/notices" replace />
-        : <Navigate to="/login"  replace />
+      isLoggedIn
+        ? <Navigate to="notices" replace />
+        : <Navigate to="login"  replace />
     }
   />
-    {/* ② 로그인 경로 (슬래시 제거!) */}
-      <Route path="login"     element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
-  {/* ③ 나머지 경로들도 모두 선행 슬래시(/) 없이 정의 */}
-      <Route path="attendance" element={isLoggedIn ? <AttendancePage />   : <Navigate to="login" replace />} />
-      <Route path="payment"    element={isLoggedIn ? <PaymentPage />      : <Navigate to="login" replace />} />
-      <Route path="notices"    element={isLoggedIn ? <NoticesPage />      : <Navigate to="login" replace />} />
-      <Route path="notices/:id"element={isLoggedIn ? <NoticeDetailPage />: <Navigate to="login" replace />} />
-      <Route path="myclass"    element={isLoggedIn ? <MyClassPage />      : <Navigate to="login" replace />} />
-      {/* ④ 그 외 모든 경로는 루트(index)로 리다이렉트 */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-           </Routes>
+
+  {/* ② 로그인 */}
+  <Route path="login"
+         element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
+
+  {/* ③ 주요 페이지 */}
+  <Route path="attendance" element={isLoggedIn
+    ? <AttendancePage /> : <Navigate to="login" replace />} />
+  <Route path="payment"    element={isLoggedIn
+    ? <PaymentPage />    : <Navigate to="login" replace />} />
+  <Route path="notices"    element={isLoggedIn
+    ? <NoticesPage />    : <Navigate to="login" replace />} />
+  <Route path="notices/:id"element={isLoggedIn
+    ? <NoticeDetailPage />: <Navigate to="login" replace />} />
+  <Route path="myclass"    element={isLoggedIn
+    ? <MyClassPage />    : <Navigate to="login" replace />} />
+
+  {/* ④ 기타 경로는 빈 문자열(=basename)로 리다이렉트 */}
+  <Route path="*" element={<Navigate to="" replace />} />
+</Routes>
     </div>
   );
 }
