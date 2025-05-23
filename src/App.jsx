@@ -256,31 +256,26 @@ const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
       )}
 
       <Routes>
-  {/* ① 빈 경로(루트 /parents-web/)에 대한 처리 */}
-     <Route 
-       index 
-       element={
-         isLoggedIn 
-           ? <Navigate to="/notices" replace /> 
-           : <Navigate to="/login" replace />
-       } 
-     />
-        <Route path="/login"   element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
-   {/* 이제 path="/" 는 없어도 되지만, 남겨도 무방합니다 */}
-   <Route path="/"        element={
-     isLoggedIn
-      ? <Navigate to="/notices" replace />
-       : <Navigate to="/login" replace />
-   }/>
-        <Route path="/attendance" element={isLoggedIn ? <AttendancePage /> : <Navigate to="/login" replace />} />
-        <Route path="/payment" element={isLoggedIn ? <PaymentPage /> : <Navigate to="/login" replace />} />
-        <Route path="/notices" element={isLoggedIn ? <NoticesPage /> : <Navigate to="/login" replace />} />
-        <Route path="/notices/:id" element={isLoggedIn ? <NoticeDetailPage /> : <Navigate to="/login" replace />} />
-        <Route path="/myclass" element={isLoggedIn ? <MyClassPage /> : <Navigate to="/login" replace />} />
-      
-     {/* ③ 와일드카드는 남은 모든 경로를 빈 경로(/)로 보냄 */}
-     <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+  {/* ① 빈 경로(/parents-web/)를 잡아줄 인덱스 라우트 */}
+       <Route 
+         index 
+         element={
+           isLoggedIn 
+             ? <Navigate to="notices" replace />
+             : <Navigate to="login" replace />
+         }
+       />
+    {/* ② 로그인 경로 (슬래시 제거!) */}
+      <Route path="login"     element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
+  {/* ③ 나머지 경로들도 모두 선행 슬래시(/) 없이 정의 */}
+      <Route path="attendance" element={isLoggedIn ? <AttendancePage />   : <Navigate to="login" replace />} />
+      <Route path="payment"    element={isLoggedIn ? <PaymentPage />      : <Navigate to="login" replace />} />
+      <Route path="notices"    element={isLoggedIn ? <NoticesPage />      : <Navigate to="login" replace />} />
+      <Route path="notices/:id"element={isLoggedIn ? <NoticeDetailPage />: <Navigate to="login" replace />} />
+      <Route path="myclass"    element={isLoggedIn ? <MyClassPage />      : <Navigate to="login" replace />} />
+      {/* ④ 그 외 모든 경로는 루트(index)로 리다이렉트 */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+           </Routes>
     </div>
   );
 }
