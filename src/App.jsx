@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  HashRouter,
   Routes,
   Route,
   NavLink,
@@ -20,11 +19,7 @@ import MyClassPage from "./pages/MyClassPage.jsx";
 import './App.css';
 
 export default function App() {
-  return (
-    <HashRouter>
-      <AppContent />
-    </HashRouter>
-  );
+  return <AppContent />;
 }
 
 function AppContent() {

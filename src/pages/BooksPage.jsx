@@ -11,16 +11,17 @@ export default function BooksPage() {
   useEffect(() => {
     const ref = collection(db, "books");
     return onSnapshot(ref, (qs) => {
-      const allBooks = qs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+     const allBooks = qs.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       const myBooks = allBooks.filter((b) => b.studentId === studentId);
       setBooks(myBooks);
     });
   }, [studentId]);
 
   // 정렬된 책 목록
+  
   const sortedBooks = useMemo(() => {
     if (!sortKey) return books;
-    const arr = [...books];
+     const arr = [...books];
  return arr.sort((a, b) => {
    // sortKey에 따라 비교 로직…
    if (sortKey === "grade")        return a.grade - b.grade;
@@ -68,14 +69,45 @@ export default function BooksPage() {
         >
           엑셀 다운로드
         </button>
-        <button onClick={() => setSortKey("grade")} style={{ padding: "8px 12px", cursor: "pointer" }}>
+        <button
+          onClick={() => setSortKey("grade")}
+          style={{
+            padding: "8px 12px",
+            marginLeft: "4px",
+            backgroundColor: "#28a745",
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
           학년 정렬
         </button>
-        <button onClick={() => setSortKey("title")} style={{ padding: "8px 12px", cursor: "pointer" }}>
+        <button
+          onClick={() => setSortKey("title")}
+          style={{
+            padding: "8px 12px",
+            backgroundColor: "#17a2b8",
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
           문제집 정렬
         </button>
-        <button onClick={() => setSortKey("completedDate")} style={{ padding: "8px 12px", cursor: "pointer" }}>
-          완료일 정렬
+        <button
+          onClick={() => setSortKey("completedDate")}
+          style={{
+            padding: "8px 12px",
+            backgroundColor: "#ffc107",
+            color: "#000",
+            border: "none",
+           borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+         완료일 정렬
         </button>
       </div>
 
