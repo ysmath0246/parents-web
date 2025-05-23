@@ -256,15 +256,15 @@ const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
       )}
 
       <Routes>
-  {/* ① 빈 경로(/parents-web/)를 잡아줄 인덱스 라우트 */}
-       <Route 
-         index 
-         element={
-           isLoggedIn 
-             ? <Navigate to="notices" replace />
-             : <Navigate to="login" replace />
-         }
-       />
+  {/* 빈 경로(/)와 / 모두를 잡아 주는 명시적 루트 */}
+  <Route 
+    path="/" 
+    element={
+      isLoggedIn 
+        ? <Navigate to="/notices" replace />
+        : <Navigate to="/login"  replace />
+    }
+  />
     {/* ② 로그인 경로 (슬래시 제거!) */}
       <Route path="login"     element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
   {/* ③ 나머지 경로들도 모두 선행 슬래시(/) 없이 정의 */}
