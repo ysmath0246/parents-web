@@ -91,6 +91,13 @@
   flex-direction: column;         /* ⭐ 세로 배치 */
   justify-content: flex-start;    /* ⭐ 위쪽부터 시작 */
 }
+/* App.css에 추가 */
+.page-books .container {
+  display: block;      /* flex 해제 */
+  min-height: auto;    /* vh 높이 제한 해제 */
+  overflow: visible;   /* 자식 요소 숨김 해제 */
+}
+
 
 /* 포인트페이지는 max-width 다르게 필요 시 별도 지정 */
 .container-wide {

@@ -17,6 +17,7 @@ import PaymentPage from "./pages/PaymentPage.jsx";
 import NoticesPage from "./pages/NoticesPage.jsx";
 import NoticeDetailPage from "./pages/NoticeDetailPage.jsx";
 import MyClassPage from "./pages/MyClassPage.jsx";
+import './App.css';
 
 export default function App() {
   return (

@@ -56,7 +56,9 @@ export default function MyClassPage() {
       </div>
 
       {tab === "comments" && <CommentPage />}
-      {tab === "books" && <BooksPage />}
+    <div className="page-books">
+   {tab === "books" && <BooksPage />}
+ </div>
       {tab === "points" && <PointsPage />}
     </div>
   );
