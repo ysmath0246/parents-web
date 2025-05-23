@@ -256,13 +256,15 @@ const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
       )}
 
       <Routes>
-          {/* 빈 경로(즉 /parents-web/) 에 대응하는 인덱스 라우트 */}
-   <Route index element={
-     isLoggedIn
-       ? <Navigate to="/notices" replace />
-       : <Navigate to="/login" replace />
-   }/>
-
+  {/* ① 빈 경로(루트 /parents-web/)에 대한 처리 */}
+     <Route 
+       index 
+       element={
+         isLoggedIn 
+           ? <Navigate to="/notices" replace /> 
+           : <Navigate to="/login" replace />
+       } 
+     />
         <Route path="/login"   element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
    {/* 이제 path="/" 는 없어도 되지만, 남겨도 무방합니다 */}
    <Route path="/"        element={
@@ -275,6 +277,9 @@ const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
         <Route path="/notices" element={isLoggedIn ? <NoticesPage /> : <Navigate to="/login" replace />} />
         <Route path="/notices/:id" element={isLoggedIn ? <NoticeDetailPage /> : <Navigate to="/login" replace />} />
         <Route path="/myclass" element={isLoggedIn ? <MyClassPage /> : <Navigate to="/login" replace />} />
+      
+     {/* ③ 와일드카드는 남은 모든 경로를 빈 경로(/)로 보냄 */}
+     <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );
