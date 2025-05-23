@@ -256,8 +256,20 @@ const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
       )}
 
       <Routes>
-        <Route path="/login" element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
-        <Route path="/" element={isLoggedIn ? <Navigate to="/notices" replace /> : <Navigate to="/login" replace />} />
+          {/* 빈 경로(즉 /parents-web/) 에 대응하는 인덱스 라우트 */}
+   <Route index element={
+     isLoggedIn
+       ? <Navigate to="/notices" replace />
+       : <Navigate to="/login" replace />
+   }/>
+
+        <Route path="/login"   element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
+   {/* 이제 path="/" 는 없어도 되지만, 남겨도 무방합니다 */}
+   <Route path="/"        element={
+     isLoggedIn
+      ? <Navigate to="/notices" replace />
+       : <Navigate to="/login" replace />
+   }/>
         <Route path="/attendance" element={isLoggedIn ? <AttendancePage /> : <Navigate to="/login" replace />} />
         <Route path="/payment" element={isLoggedIn ? <PaymentPage /> : <Navigate to="/login" replace />} />
         <Route path="/notices" element={isLoggedIn ? <NoticesPage /> : <Navigate to="/login" replace />} />
