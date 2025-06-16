@@ -1,6 +1,6 @@
 // src/pages/MyClassPage.jsx
 import { useState } from "react";
-import PointsPage from "./PointsPage";
+
 import BooksPage from "./BooksPage";
 import CommentPage from "./CommentsPage";
 
@@ -40,19 +40,7 @@ export default function MyClassPage() {
         >
           문제집
         </button>
-        <button
-          onClick={() => setTab("points")}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: tab === "points" ? "#007bff" : "#f0f0f0",
-            color: tab === "points" ? "#fff" : "#333",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          포인트
-        </button>
+       
       </div>
 
       {tab === "comments" && <CommentPage />}

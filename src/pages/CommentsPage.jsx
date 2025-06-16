@@ -60,6 +60,7 @@ export default function CommentsPage() {
   return (
     <div className="container" style={{ textAlign: "center", marginTop: "40px" }}>
       <h2 style={{ fontSize: "20px", marginBottom: "16px" }}>📝 저장된 코멘트</h2>
+      <h3 style={{ fontSize: "15px", marginBottom: "16px" }}>** 한달에 한번정도 코멘트 나갑니다! ** </h3>
       <ul style={{ listStyle: "none", padding: 0, textAlign: "left" }}>
         {comments
           .filter(c => !c.comment.startsWith("답변:"))
