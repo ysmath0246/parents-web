@@ -16,6 +16,9 @@ import PaymentPage from "./pages/PaymentPage.jsx";
 import NoticesPage from "./pages/NoticesPage.jsx";
 import NoticeDetailPage from "./pages/NoticeDetailPage.jsx";
 import MyClassPage from "./pages/MyClassPage.jsx";
+import EnrollPage from "./pages/EnrollPage.jsx";
+import NewEnrollPage from "./pages/NewEnrollPage.jsx";
+
 import './App.css';
 
 export default function App() {
@@ -132,7 +135,7 @@ const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
             textAlign: "center",
           }}
         >
-        {[ "/attendance", "/payment", "/notices", "/myclass" ].map((path) => (
+        {[ "/attendance", "/payment", "/notices", "/myclass", "/enroll" ].map((path) => (
   <NavLink
     key={path}
     to={path}
@@ -176,6 +179,7 @@ const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
           )}
         </>
       ),
+        "/enroll": "수강신청",
     }[path]}
   </NavLink>
 ))}
@@ -270,6 +274,7 @@ const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
   {/* ② 로그인 */}
   <Route path="login"
          element={<LoginPage onLoginSuccess={() => setIsLoggedIn(true)} />} />
+<Route path="new-enroll" element={<NewEnrollPage />} />
 
   {/* ③ 주요 페이지 */}
   <Route path="attendance" element={isLoggedIn
@@ -282,7 +287,8 @@ const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
     ? <NoticeDetailPage />: <Navigate to="login" replace />} />
   <Route path="myclass"    element={isLoggedIn
     ? <MyClassPage />    : <Navigate to="login" replace />} />
-
+<Route path="enroll"     element={isLoggedIn
+ ? <EnrollPage />     : <Navigate to="login" replace />} />
   {/* ④ 기타 경로는 빈 문자열(=basename)로 리다이렉트 */}
   <Route path="*" element={<Navigate to="" replace />} />
 </Routes>

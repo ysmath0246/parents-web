@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>학부모관리 웹</title>
 
- <!-- Vite 기본 entry (root-relative so base will be applied) -->
-      <link rel="icon" href="/parents-web/favicon.ico" />
-    <script type="module" crossorigin src="/parents-web/assets/index-BaBM2mkf.js"></script>
-    <link rel="stylesheet" crossorigin href="/parents-web/assets/index-CeiWzIlC.css">
+    <!-- 개발용: 배포산출물(assets/...) 참조 금지, 엔트리를 src로! -->
+    <!-- base('/parents-web/')가 있어도 상대경로(./) 쓰면 dev/배포 둘 다 안전 -->
+    <link rel="icon" href="./favicon.ico" />
+    <script type="module" src="./src/main.jsx"></script>
+    <!-- 타입스크립트라면 위 줄 대신 아래 줄 사용 -->
+    <!-- <script type="module" src="./src/main.tsx"></script> -->
   </head>
   <body>
     <div id="root"></div>
-
   </body>
 </html>
