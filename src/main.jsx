@@ -1,14 +1,11 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import './index.css'
-import App from './App.jsx'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import App from './App.jsx';
 
+// #root에 React 앱 렌더
 createRoot(document.getElementById('root')).render(
-   <StrictMode>
-    {/* GitHub Pages 서브폴더용 basename 설정 */}
-   <BrowserRouter basename="/parents-web">   
-           <App />         
-   </BrowserRouter>
-  </StrictMode>,
-)
+  <StrictMode>
+    <App />
+  </StrictMode>
+);

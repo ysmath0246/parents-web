@@ -19,15 +19,49 @@ import NoticeDetailPage from "./pages/NoticeDetailPage.jsx";
 import MyClassPage from "./pages/MyClassPage.jsx";
 import EnrollPage from "./pages/EnrollPage.jsx";
 import NewEnrollPage from "./pages/NewEnrollPage.jsx";
-
+import React from "react";
 import './App.css';
 
+// ---- ErrorBoundary 정의 ----
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    // 콘솔에 상세 원인 남기기
+    console.error("ErrorBoundary caught:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 16 }}>
+          문제가 발생했어요. 새로고침(F5)하거나, 우측 상단에서 ‘로그아웃’ 후 다시 로그인해 주세요.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ---- Firestore 날짜 안전 변환 유틸 ----
+const toJSDate = (v) => {
+  if (!v) return null;
+  if (typeof v.toDate === "function") return v.toDate(); // Firestore Timestamp
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+};
 export default function App() {
   // 해시 라우터로 감싸면 새로고침해도 404 안 납니다(GH Pages 권장).
   return (
     <HashRouter>
-      <AppContent />
-    </HashRouter>
+   <ErrorBoundary>
+     <AppContent />
+   </ErrorBoundary>
+ </HashRouter>
   );
 }
 
@@ -36,6 +70,8 @@ function AppContent() {
   const [showChangePw, setShowChangePw] = useState(false);
   const [newPw, setNewPw] = useState("");
   const location = useLocation();
+  const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
+
 
   useEffect(() => {
     const checkLogin = () => {
@@ -67,13 +103,13 @@ useEffect(() => {
     const recentComment = commentsSnap.docs.some(doc => {
       const data = doc.data();
       return data.studentId === studentId &&
-             new Date(data.createdAt || data.date) >= cutoff;
+            (toJSDate(data.createdAt || data.completedDate) ?? new Date(0)) >= cutoff
     });
 
     const recentBook = booksSnap.docs.some(doc => {
       const data = doc.data();
       return data.studentId === studentId &&
-             new Date(data.createdAt || data.completedDate) >= cutoff;
+            (toJSDate(data.createdAt || data.completedDate) ?? new Date(0)) >= cutoff
     });
 
     setHasNewCommentOrBook(recentComment || recentBook);
@@ -123,147 +159,130 @@ useEffect(() => {
       alert("PIN 변경 중 오류가 발생했습니다.");
     }
   }
-const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
 
 
 
   return (
-    <div>
+     <div className="app-shell page">
+     
       {isLoggedIn && (
-        <nav
-          style={{
-            position: "sticky",
-            top: 0,
-            backgroundColor: "#fff",
-            padding: "8px 0",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            zIndex: 1000,
-            textAlign: "center",
-          }}
+  <nav className="nav">
+    <div className="nav-links" style={{ justifyContent: "center" }}>
+      {["/attendance", "/payment", "/notices", "/myclass", "/enroll"].map((path) => (
+        <NavLink
+          key={path}
+          to={path}
+          style={({ isActive }) => ({
+            margin: "0 0",               // 간격은 .nav-links gap으로 통일
+            padding: "6px 12px",
+            borderRadius: 6,
+            textDecoration: "none",
+            fontWeight: isActive ? "bold" : "normal",
+            color: isActive ? "#fff" : "#333",
+            backgroundColor: isActive ? "#007bff" : "#f5f5f7",
+            position: "relative",
+            display: "inline-flex",     // 배지 위치 안정
+            alignItems: "center",
+            whiteSpace: "nowrap",
+          })}
         >
-        {[ "/attendance", "/payment", "/notices", "/myclass", "/enroll" ].map((path) => (
-  <NavLink
-    key={path}
-    to={path}
-    style={({ isActive }) => ({
-      margin: "0 8px",
-      padding: "6px 12px",
-      borderRadius: 4,
-      textDecoration: "none",
-      fontWeight: isActive ? "bold" : "normal",
-      color: isActive ? "#fff" : "#333",
-      backgroundColor: isActive ? "#007bff" : "transparent",
-      position: "relative",
-      display: "inline-block"
-    })}
-  >
-    {{
-      "/attendance": "출석",
-      "/payment": "결제",
-      "/notices": "공지사항",
-      "/myclass": (
-        <>
-          내아이수업현황
-          {hasNewCommentOrBook && (
-           <span className="pulse wiggle"
-  style={{
-    position: "absolute",
-    top: -8,
-    right: -12,
-    backgroundColor: "red",
-    color: "white",
-    borderRadius: "12px",
-    padding: "2px 6px",
-    fontSize: "10px",
-    fontWeight: "bold",
-    fontFamily: "'Segoe UI', 'Apple SD Gothic Neo', sans-serif",
-  }}
->
-  🔥 새글
-</span>
+          {{
+            "/attendance": "출석",
+            "/payment": "결제",
+            "/notices": "공지사항",
+            "/myclass": (
+              <>
+                내아이수업현황
+                {hasNewCommentOrBook && (
+                  <span
+                    className="pulse wiggle"
+                    style={{
+                      position: "absolute",
+                      top: -8,
+                      right: -12,
+                      backgroundColor: "red",
+                      color: "white",
+                      borderRadius: "12px",
+                      padding: "2px 6px",
+                      fontSize: "10px",
+                      fontWeight: "bold",
+                      fontFamily: "'Segoe UI','Apple SD Gothic Neo',sans-serif",
+                    }}
+                  >
+                    🔥 새글
+                  </span>
+                )}
+              </>
+            ),
+            "/enroll": "수강신청",
+          }[path]}
+        </NavLink>
+      ))}
 
-          )}
-        </>
-      ),
-        "/enroll": "수강신청",
-    }[path]}
-  </NavLink>
-))}
+      <button
+        onClick={() => setShowChangePw(true)}
+        style={{
+          padding: "6px 12px",
+          border: "none",
+          borderRadius: 6,
+          backgroundColor: "#f0f0f0",
+          cursor: "pointer",
+        }}
+      >
+        PIN 변경
+      </button>
 
+      <button
+        onClick={() => {
+          localStorage.clear();
+          setIsLoggedIn(false);
+          window.location.hash = "#/login";
+        }}
+        style={{
+          padding: "6px 12px",
+          border: "none",
+          borderRadius: 6,
+          backgroundColor: "#f0f0f0",
+          cursor: "pointer",
+        }}
+      >
+        로그아웃
+      </button>
+    </div>
 
+    {showChangePw && (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div className="modal" style={{ background: "#fff", padding: 20, borderRadius: 8 }}>
+          <h2>PIN 변경</h2>
+          <input
+            type="text"
+            maxLength={4}
+            value={newPw}
+            onChange={(e) => setNewPw(e.target.value.replace(/\D/g, ""))}
+            placeholder="새 PIN (4자리)"
+            style={{ width: "100%", padding: 8, margin: "12px 0" }}
+          />
+          <div style={{ textAlign: "right" }}>
+            <button onClick={() => setShowChangePw(false)} style={{ marginRight: 8 }}>
+              취소
+            </button>
+            <button onClick={handlePasswordChange}>변경</button>
+          </div>
+        </div>
+      </div>
+    )}
+  </nav>
+)}
 
-          <button
-            onClick={() => setShowChangePw(true)}
-            style={{
-              marginLeft: 20,
-              padding: "6px 12px",
-              border: "none",
-              borderRadius: 4,
-              backgroundColor: "#f0f0f0",
-              cursor: "pointer",
-            }}
-          >
-            PIN 변경
-          </button>
-          <button
-            onClick={() => {
-              localStorage.clear();
-              setIsLoggedIn(false);
-              window.location.hash = "#/login";
-            }}
-            style={{
-              marginLeft: 8,
-              padding: "6px 12px",
-              border: "none",
-              borderRadius: 4,
-              backgroundColor: "#f0f0f0",
-              cursor: "pointer",
-            }}
-          >
-            로그아웃
-          </button>
-
-          {showChangePw && (
-            <div
-              style={{
-                position: "fixed",
-                inset: 0,
-                backgroundColor: "rgba(0,0,0,0.5)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <div
-                style={{
-                  background: "#fff",
-                  padding: 20,
-                  borderRadius: 8,
-                  width: 300,
-                }}
-              >
-                <h2>PIN 변경</h2>
-                <input
-                  type="text"
-                  maxLength={4}
-                  value={newPw}
-                  onChange={(e) => setNewPw(e.target.value.replace(/\D/g, ""))}
-                  placeholder="새 PIN (4자리)"
-                  style={{ width: "100%", padding: 8, margin: "12px 0" }}
-                />
-                <div style={{ textAlign: "right" }}>
-                  <button onClick={() => setShowChangePw(false)} style={{ marginRight: 8 }}>
-                    취소
-                  </button>
-                  <button onClick={handlePasswordChange}>
-                    변경
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </nav>
-      )}
 
      
  <Routes>
@@ -296,7 +315,7 @@ const [hasNewCommentOrBook, setHasNewCommentOrBook] = useState(false);
 <Route path="enroll"     element={isLoggedIn
  ? <EnrollPage />     : <Navigate to="login" replace />} />
   {/* ④ 기타 경로는 빈 문자열(=basename)로 리다이렉트 */}
-  <Route path="*" element={<Navigate to="" replace />} />
+  <Route path="*" element={<Navigate to="/" replace />} />
 </Routes>
     </div>
   );
