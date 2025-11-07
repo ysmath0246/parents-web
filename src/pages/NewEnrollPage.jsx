@@ -126,8 +126,8 @@ export default function NewEnrollPage() {
       return;
     }
 
-    // 문서ID = 학생이름
-    const ref = doc(db, "students", name);
+    // 문서ID = 학생이름 (컬렉션: newstudent)
+    const ref = doc(db, "newstudent", name);
     const snap = await getDoc(ref);
 
     if (!snap.exists()) {
@@ -167,7 +167,8 @@ export default function NewEnrollPage() {
       if (!ok) return;
     }
 
-    const ref = doc(db, "students", name); // 문서 ID = 학생이름
+    // 컬렉션: newstudent, 문서 ID = 학생이름
+    const ref = doc(db, "newstudent", name);
     await setDoc(
       ref,
       {
@@ -372,7 +373,7 @@ export default function NewEnrollPage() {
             borderRadius: 8,
             border: "1px solid #6c757d",
             background: cursor ? "#6c757d" : "#e5e7eb",
-            color: cursor ? "#fff" : "#9ca3af",
+            color: cursor ? "##fff" : "#9ca3af",
             fontWeight: 700,
             cursor: cursor ? "pointer" : "not-allowed",
           }}
