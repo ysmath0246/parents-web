@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import {
-  Routes,
-  Route,
-  NavLink,
-  Navigate,
-  useLocation
-} from 'react-router-dom';
+ import {
+   HashRouter,
+   Routes,
+   Route,
+   NavLink,
+   Navigate,
+   useLocation
+ } from 'react-router-dom';
 import { db } from "./firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { getDocs, collection } from "firebase/firestore";
@@ -22,7 +23,12 @@ import NewEnrollPage from "./pages/NewEnrollPage.jsx";
 import './App.css';
 
 export default function App() {
-  return <AppContent />;
+  // 해시 라우터로 감싸면 새로고침해도 404 안 납니다(GH Pages 권장).
+  return (
+    <HashRouter>
+      <AppContent />
+    </HashRouter>
+  );
 }
 
 function AppContent() {
