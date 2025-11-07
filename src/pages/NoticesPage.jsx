@@ -10,12 +10,18 @@ export default function NoticesPage() {
 
   useEffect(() => {
     (async () => {
-      const snap = await getDocs(collection(db, "notices"));
-      setNotices(snap.docs.map((d) => ({
-        id: d.id,
-        title: d.data().title,
-        date: d.data().date,
-      })));
+     const snap = await getDocs(collection(db, "notices"));
+const list = snap.docs.map((d) => ({
+  id: d.id,
+  title: d.data().title,
+  date: d.data().date,
+}));
+
+// 📌 날짜 기준 내림차순 정렬 (최신 공지가 위로)
+list.sort((a, b) => b.date.localeCompare(a.date));
+
+setNotices(list);
+
     })();
 
       (async () => {
