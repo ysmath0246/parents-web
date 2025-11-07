@@ -65,28 +65,58 @@ export default function NewEnrollPage() {
   const existsIn = (arr, d, t) => arr.some((s) => s.day === d && s.time === t);
 
   const addApplied = () => {
-    if (!cursor) return;
-    const { day, time } = cursor;
-    if (existsIn(selectedApplied, day, time)) {
-      setSelectedApplied(selectedApplied.filter((s) => !(s.day === day && s.time === time)));
-      return;
-    }
-    if (selectedApplied.length >= 2) {
-      alert("신청은 최대 2개까지 가능합니다.");
-      return;
-    }
-    const idxSame = selectedApplied.findIndex((s) => s.day === day);
-    if (idxSame !== -1) {
-      const next = [...selectedApplied];
-      next[idxSame] = { day, time };
-      setSelectedApplied(next);
-    } else {
-      setSelectedApplied([...selectedApplied, { day, time }]);
-    }
-    if (existsIn(selectedWaitlist, day, time)) {
-      setSelectedWaitlist(selectedWaitlist.filter((s) => !(s.day === day && s.time === time)));
-    }
-  };
+  if (!cursor) return;
+  const { day, time } = cursor;
+  const k = keyOf(day, time);
+  const currentCount = countsApplied[k] || 0; // waitlist 제외(=신청+예비)
+
+  // 이미 신청에 있으면 제거(토글)
+  if (existsIn(selectedApplied, day, time)) {
+    setSelectedApplied(selectedApplied.filter((s) => !(s.day === day && s.time === time)));
+    return;
+  }
+
+  // 상태/문구
+  let status = "applied";
+  let message = "신청되었습니다.";
+  if (currentCount >= 6 && currentCount < 8) {
+    status = "reserve";
+    message = "현재 6명까지 신청되었습니다.\n7,8번째 신청자는 예비신청자입니다.";
+  } else if (currentCount >= 8) {
+    status = "waitlist";
+    message = "현재 정원이 가득 찼습니다. 대기로 신청하세요.";
+  }
+
+  if (status === "waitlist") {
+    alert(message);
+    addWaitlist();
+    return;
+  }
+
+  // 최대 2개 제한
+  if (selectedApplied.length >= 2) {
+    alert("신청은 최대 2개까지 가능합니다.");
+    return;
+  }
+
+  // 같은 요일은 교체
+  const idxSame = selectedApplied.findIndex((s) => s.day === day);
+  if (idxSame !== -1) {
+    const next = [...selectedApplied];
+    next[idxSame] = { day, time, status };
+    setSelectedApplied(next);
+  } else {
+    setSelectedApplied([...selectedApplied, { day, time, status }]);
+  }
+
+  // 대기 중복 제거
+  if (existsIn(selectedWaitlist, day, time)) {
+    setSelectedWaitlist(selectedWaitlist.filter((s) => !(s.day === day && s.time === time)));
+  }
+
+  alert(message);
+};
+
 
   const addWaitlist = () => {
     if (!cursor) return;
@@ -169,18 +199,31 @@ export default function NewEnrollPage() {
 
     // 컬렉션: newstudent, 문서 ID = 학생이름
     const ref = doc(db, "newstudent", name);
-    await setDoc(
-      ref,
-      {
-        studentName: name,
-        parentPhone: phone,
-        birth6: b6,
-        applied: selectedApplied.map(({ day, time }) => ({ day, time, group })),
-        waitlist: selectedWaitlist.map(({ day, time }) => ({ day, time, group })),
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true } // 기존 필드는 보존하며 덮어쓰기
-    );
+   await setDoc(
+  ref,
+  {
+    studentName: name,
+    parentPhone: phone,
+    birth6: b6,
+    applied: selectedApplied.map(({ day, time, status }) => ({
+      day,
+      time,
+      group,
+      status,                               // applied | reserve
+      label: status === "reserve" ? "신청(예비)" : "신청"
+    })),
+    waitlist: selectedWaitlist.map(({ day, time }) => ({
+      day,
+      time,
+      group,
+      status: "waitlist",
+      label: "대기"
+    })),
+    updatedAt: serverTimestamp(),
+  },
+  { merge: true }
+);
+
 
     alert("저장되었습니다.");
     setLoadMsg("저장 완료되었습니다.");
@@ -390,20 +433,29 @@ export default function NewEnrollPage() {
             <div style={{ color: "#6b7280" }}>없음</div>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {selectedApplied.map(({ day, time }) => (
-                <span
-                  key={`ap-${day}-${time}`}
-                  style={{ padding: "6px 10px", borderRadius: 999, border: "1px solid #0d6efd", background: "#e7f1ff", display: "inline-flex", gap: 8 }}
-                >
-                  {day} {time}
-                  <button
-                    onClick={() => removeApplied(day, time)}
-                    style={{ border: "none", background: "transparent", cursor: "pointer", color: "#0d6efd", fontWeight: 700 }}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
+              {selectedApplied.map(({ day, time, status }) => (
+  <span
+    key={`ap-${day}-${time}`}
+    style={{
+      padding: "6px 10px",
+      borderRadius: 999,
+      border: `1px solid ${status === "reserve" ? "#6c757d" : "#0d6efd"}`,
+      background: status === "reserve" ? "#f1f1f1" : "#e7f1ff",
+      display: "inline-flex",
+      gap: 8
+    }}
+    title={status === "reserve" ? "신청(예비)" : "신청"}
+  >
+    {day} {time}{status === "reserve" ? " (예비)" : ""}
+    <button
+      onClick={() => removeApplied(day, time)}
+      style={{ border: "none", background: "transparent", cursor: "pointer", color: status === "reserve" ? "#6c757d" : "#0d6efd", fontWeight: 700 }}
+    >
+      ×
+    </button>
+  </span>
+))}
+
             </div>
           )}
         </div>

@@ -93,66 +93,102 @@ export default function EnrollPage() {
   }, [group]);
 
   // (C) 학생 이름이 결정되면 enrollments_by_student/{학생이름}를 실시간 구독
-  useEffect(() => {
-    if (!studentName.trim()) {
+ // (C) 학생 이름이 결정되면 enrollments_by_student/{학생이름}를 실시간 구독
+useEffect(() => {
+  if (!studentName.trim()) {
+    setSavedApplied([]);
+    setSavedWaitlist([]);
+    setSelectedApplied([]);   // 초기화
+    setSelectedWaitlist([]);  // 초기화
+    setLastUpdated(null);
+    return;
+  }
+
+  const ref = doc(db, "enrollments_by_student", studentName.trim());
+  const unsub = onSnapshot(ref, (snap) => {
+    if (snap.exists()) {
+      const data = snap.data();
+      const appliedList = Array.isArray(data.applied) ? data.applied : [];
+      const waitList = Array.isArray(data.waitlist) ? data.waitlist : [];
+
+      // 저장된 값 상태 업데이트
+      setSavedApplied(appliedList);
+      setSavedWaitlist(waitList);
+      setLastUpdated(data.updatedAt?.toDate?.() || null);
+
+      // ✅ 선택 상태에도 자동 반영
+      setSelectedApplied(appliedList.map(({ day, time, status }) => ({ day, time, status })));
+      setSelectedWaitlist(waitList.map(({ day, time }) => ({ day, time })));
+    } else {
       setSavedApplied([]);
       setSavedWaitlist([]);
+      setSelectedApplied([]);
+      setSelectedWaitlist([]);
       setLastUpdated(null);
-      return;
     }
-    const ref = doc(db, "enrollments_by_student", studentName.trim());
-    const unsub = onSnapshot(ref, (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        setSavedApplied(Array.isArray(data.applied) ? data.applied : []);
-        setSavedWaitlist(Array.isArray(data.waitlist) ? data.waitlist : []);
-        setLastUpdated(data.updatedAt?.toDate?.() || null);
-      } else {
-        setSavedApplied([]);
-        setSavedWaitlist([]);
-        setLastUpdated(null);
-      }
-    });
-    return () => unsub();
-  }, [studentName]);
+  });
+  return () => unsub();
+}, [studentName]);
 
   // ====== 헬퍼 ======
   const keyOf = (d, t) => `${d}|${t}`;
   const existsIn = (arr, d, t) => arr.some((s) => s.day === d && s.time === t);
 
-  // ====== 선택 조작 ======
-  // 신청 추가(최대 2개, 같은 요일 1개만)
-  const addApplied = () => {
-    if (!cursor) return;
-    const { day, time } = cursor;
+ // 신청 추가(최대 2개, 같은 요일 1개만) — 정원/예비/대기 분기 + 안내 문구
+const addApplied = () => {
+  if (!cursor) return;
+  const { day, time } = cursor;
+  const k = keyOf(day, time);
+  const currentCount = countsApplied[k] || 0; // waitlist 제외(=신청+예비)
 
-    // 이미 신청으로 있으면 토글 제거
-    if (existsIn(selectedApplied, day, time)) {
-      setSelectedApplied(selectedApplied.filter((s) => !(s.day === day && s.time === time)));
-      return;
-    }
+  // 이미 신청에 있으면 제거(토글)
+  if (existsIn(selectedApplied, day, time)) {
+    setSelectedApplied(selectedApplied.filter((s) => !(s.day === day && s.time === time)));
+    return;
+  }
 
-    // 최대 2개 제한
-    if (selectedApplied.length >= 2) {
-      alert("신청은 최대 2개까지만 선택할 수 있어요.");
-      return;
-    }
+  // 상태/안내 문구 결정
+  let status = "applied";
+  let message = "신청되었습니다.";
+  if (currentCount >= 6 && currentCount < 8) {
+    status = "reserve";
+    message = "현재 6명까지 신청되었습니다.\n7,8번째 신청자는 예비신청자입니다.";
+  } else if (currentCount >= 8) {
+    status = "waitlist";
+    message = "현재 정원이 가득 찼습니다. 대기로 신청하세요.";
+  }
 
-    // 같은 요일은 교체
-    const idxSameDay = selectedApplied.findIndex((s) => s.day === day);
-    if (idxSameDay !== -1) {
-      const next = [...selectedApplied];
-      next[idxSameDay] = { day, time };
-      setSelectedApplied(next);
-    } else {
-      setSelectedApplied([...selectedApplied, { day, time }]);
-    }
+  // 대기 구간이면 곧장 대기로 보냄
+  if (status === "waitlist") {
+    alert(message);
+    addWaitlist();
+    return;
+  }
 
-    // 대기에 같은 슬롯이 있으면 제거
-    if (existsIn(selectedWaitlist, day, time)) {
-      setSelectedWaitlist(selectedWaitlist.filter((s) => !(s.day === day && s.time === time)));
-    }
-  };
+  // 최대 2개 제한
+  if (selectedApplied.length >= 2) {
+    alert("신청은 최대 2개까지만 선택할 수 있어요.");
+    return;
+  }
+
+  // 같은 요일은 교체
+  const idxSameDay = selectedApplied.findIndex((s) => s.day === day);
+  if (idxSameDay !== -1) {
+    const next = [...selectedApplied];
+    next[idxSameDay] = { day, time, status };
+    setSelectedApplied(next);
+  } else {
+    setSelectedApplied([...selectedApplied, { day, time, status }]);
+  }
+
+  // 대기에 같은 슬롯이 있으면 제거
+  if (existsIn(selectedWaitlist, day, time)) {
+    setSelectedWaitlist(selectedWaitlist.filter((s) => !(s.day === day && s.time === time)));
+  }
+
+  alert(message);
+};
+
 
   // 대기 추가(무제한, 중복 방지)
   const addWaitlist = () => {
@@ -192,13 +228,26 @@ export default function EnrollPage() {
     const batch = writeBatch(db);
 
     // 1) 학생별 요약문서(enrollments_by_student/{학생이름}) 덮어쓰기
-    const refStudent = doc(db, "enrollments_by_student", studentName.trim());
-    batch.set(refStudent, {
-      studentName: studentName.trim(),
-      applied: selectedApplied.map(({ day, time }) => ({ day, time, group })),
-      waitlist: selectedWaitlist.map(({ day, time }) => ({ day, time, group })),
-      updatedAt: serverTimestamp(),
-    });
+const refStudent = doc(db, "enrollments_by_student", studentName.trim());
+batch.set(refStudent, {
+  studentName: studentName.trim(),
+  applied: selectedApplied.map(({ day, time, status }) => ({
+    day,
+    time,
+    group,
+    status,                // applied | reserve
+    label: status === "reserve" ? "신청(예비)" : "신청"
+  })),
+  waitlist: selectedWaitlist.map(({ day, time }) => ({
+    day,
+    time,
+    group,
+    status: "waitlist",
+    label: "대기"
+  })),
+  updatedAt: serverTimestamp(),
+});
+
 
     // 2) counts 집계를 위해 사용하는 원천 컬렉션(enrollments)을 학생 단위로 밀어넣기 전에
     //    먼저 이 학생의 기존 엔트리를 모두 삭제 (applied/waitlist 전체 초기화)
@@ -206,33 +255,35 @@ export default function EnrollPage() {
     const prev = await getDocs(qMe);
     prev.forEach((snap) => batch.delete(snap.ref));
 
-    // 3) 새 선택을 enrollments에 재기록 (인원수 실시간 집계용)
-    selectedApplied.forEach(({ day, time }) => {
-      const id = `${studentName.trim()}|${group}|${day}|${time}|applied`;
-      const r = doc(db, "enrollments", id);
-      batch.set(r, {
-        studentName: studentName.trim(),
-        group,
-        day,
-        time,
-        status: "applied",
-        createdAt: serverTimestamp(),
-      });
-    });
+   // 3) 새 선택을 enrollments에 재기록 (인원수 실시간 집계용)
+selectedApplied.forEach(({ day, time, status }) => {
+  const safeStatus = status === "reserve" ? "reserve" : "applied";
+  const id = `${studentName.trim()}|${group}|${day}|${time}|${safeStatus}`;
+  const r = doc(db, "enrollments", id);
+  batch.set(r, {
+    studentName: studentName.trim(),
+    group,
+    day,
+    time,
+    status: safeStatus, // applied | reserve
+    createdAt: serverTimestamp(),
+  });
+});
 
-    selectedWaitlist.forEach(({ day, time }) => {
-      const id = `${studentName.trim()}|${group}|${day}|${time}|waitlist`;
-      const r = doc(db, "enrollments", id);
-      batch.set(r, {
-        studentName: studentName.trim(),
-        group,
-        day,
-        time,
-        status: "waitlist",
-        createdAt: serverTimestamp(),
-      });
-    });
+selectedWaitlist.forEach(({ day, time }) => {
+  const id = `${studentName.trim()}|${group}|${day}|${time}|waitlist`;
+  const r = doc(db, "enrollments", id);
+  batch.set(r, {
+    studentName: studentName.trim(),
+    group,
+    day,
+    time,
+    status: "waitlist",
+    createdAt: serverTimestamp(),
+  });
+});
 
+  
     await batch.commit();
     alert("저장되었습니다.");
   };
@@ -442,35 +493,37 @@ export default function EnrollPage() {
             <div style={{ color: "#6b7280" }}>없음</div>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {selectedApplied.map(({ day, time }) => (
-                <span
-                  key={`ap-${day}-${time}`}
-                  style={{
-                    padding: "6px 10px",
-                    borderRadius: 999,
-                    border: "1px solid #0d6efd",
-                    background: "#e7f1ff",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  {day} {time}
-                  <button
-                    onClick={() => removeApplied(day, time)}
-                    title="제거"
-                    style={{
-                      border: "none",
-                      background: "transparent",
-                      cursor: "pointer",
-                      fontWeight: 700,
-                      color: "#0d6efd",
-                    }}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
+             {selectedApplied.map(({ day, time, status }) => (
+  <span
+    key={`ap-${day}-${time}`}
+    style={{
+      padding: "6px 10px",
+      borderRadius: 999,
+      border: `1px solid ${status === "reserve" ? "#6c757d" : "#0d6efd"}`, // 예비=회색
+      background: status === "reserve" ? "#f1f1f1" : "#e7f1ff",           // 예비=연회색 배경
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 8,
+    }}
+    title={status === "reserve" ? "신청(예비)" : "신청"}
+  >
+    {day} {time}{status === "reserve" ? " (예비)" : ""}
+    <button
+      onClick={() => removeApplied(day, time)}
+      title="제거"
+      style={{
+        border: "none",
+        background: "transparent",
+        cursor: "pointer",
+        fontWeight: 700,
+        color: status === "reserve" ? "#6c757d" : "#0d6efd",
+      }}
+    >
+      ×
+    </button>
+  </span>
+))}
+
             </div>
           )}
         </div>
@@ -524,11 +577,19 @@ export default function EnrollPage() {
           <div style={{ color: "#6b7280" }}>학생 정보 로딩 중…</div>
         ) : (
           <>
-            <div style={{ marginBottom: 4 }}><b>신청:</b>{" "}
-              {savedApplied.length
-                ? savedApplied.map((s) => `${s.group === "elementary" ? "초등부" : "중등부"} ${s.day} ${s.time}`).join(", ")
-                : <span style={{ color:"#6b7280" }}>없음</span>}
-            </div>
+           <div style={{ marginBottom: 4 }}>
+  <b>신청:</b>{" "}
+  {savedApplied.length
+    ? savedApplied
+        .map((s) => {
+          const g = s.group === "elementary" ? "초등부" : "중등부";
+          const tag = s.status === "reserve" || s?.label === "신청(예비)" ? " (예비)" : "";
+          return `${g} ${s.day} ${s.time}${tag}`;
+        })
+        .join(", ")
+    : <span style={{ color:"#6b7280" }}>없음</span>}
+</div>
+
             <div><b>대기:</b>{" "}
               {savedWaitlist.length
                 ? savedWaitlist.map((s) => `${s.group === "elementary" ? "초등부" : "중등부"} ${s.day} ${s.time}`).join(", ")
