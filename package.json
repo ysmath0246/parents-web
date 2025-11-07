@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "npx vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && git add docs -f && (git commit -m \"🚀 자동 배포 (docs)\" || echo no-changes) && git subtree push --prefix docs origin gh-pages --force"
+"deploy": "npm run build && git add docs -A && (git commit -m \"🚀 자동 배포 (docs)\" || echo no-changes) && git push origin main"
   }
   "dependencies": {
     "date-fns": "^4.1.0",
