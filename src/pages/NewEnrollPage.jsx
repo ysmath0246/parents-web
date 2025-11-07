@@ -208,7 +208,7 @@ export default function NewEnrollPage() {
             <input
               value={parentPhone}
               onChange={(e) => setParentPhone(e.target.value)}
-              placeholder="예: 010-1234-5678"
+              placeholder="예: 01012345678(-없이)" 
               style={{ width: "100%", padding: 8, border: "1px solid #d1d5db", borderRadius: 8 }}
             />
           </div>
