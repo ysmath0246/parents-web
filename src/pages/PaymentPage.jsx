@@ -7,6 +7,8 @@ import {
   setDoc,
   onSnapshot,
   collection,
+  getDocs,
+  getDoc,
 } from "firebase/firestore";
 
 export default function PaymentPage() {
@@ -78,37 +80,89 @@ export default function PaymentPage() {
     return () => unsub();
   }, [studentId]);
 
-  // 4) 전체 루틴(lessons) 실시간 구독 + 최초 1회만 today 기준 루틴 인덱스 설정
+  // 4) 전체 루틴 실시간 구독 (새 routines 구조 기준) + 최초 1회만 today 기준 루틴 인덱스 설정
   useEffect(() => {
     if (!studentId) return;
 
     const unsubRoutine = onSnapshot(
-      doc(db, "routines", studentId),
-      (snap) => {
-        if (!snap.exists()) return;
-        const lessons = snap.data().lessons || [];
-        setSessions(lessons);
+      collection(db, "routines"),
+      async (qs) => {
+        // 1) 이 학생이 포함된 루틴 문서만 모으기
+        const docsForStudent = qs.docs.filter((d) => {
+          const data = d.data();
+          return data.students && data.students[studentId];
+        });
 
-        // 최초 1회만 오늘 날짜 기준으로 currentRoutineIndex 계산
+        if (docsForStudent.length === 0) {
+          setSessions([]);
+          return;
+        }
+
+        // 2) 각 문서에서 sessions 꺼내서 하나의 lessons 배열로 만들기
+        let lessons = [];
+        docsForStudent.forEach((d) => {
+          const data = d.data();
+          const st = data.students[studentId];
+          const rn = st.routineNumber || data.routineNumber || 1;
+          const sessionsObj = st.sessions || {};
+
+          const arr = Object.values(sessionsObj).sort(
+            (a, b) => (a.session || 0) - (b.session || 0)
+          );
+
+          arr.forEach((s) => {
+            lessons.push({
+              date: s.date,
+              session: s.session,
+              routineNumber: rn,
+            });
+          });
+        });
+
+        // 3) attendance 컬렉션에서 상태/시간 붙이기
+        const dates = Array.from(new Set(lessons.map((l) => l.date)));
+        const studentName = (student && student.name) || null;
+        
+        const attendanceEntries = await Promise.all(
+          dates.map(async (date) => {
+            const snap = await getDoc(doc(db, "attendance", date));
+            if (!snap.exists()) return [date, {}];
+            const data = snap.data();
+            const rec =
+              data[studentId] ||
+              (studentName && data[studentName]) ||
+              {};
+            return [date, rec];
+          })
+        );
+
+        const attendanceMap = Object.fromEntries(attendanceEntries);
+
+        const lessonsWithStatus = lessons.map((l) => ({
+          ...l,
+          status: attendanceMap[l.date]?.status || "",
+          time: attendanceMap[l.date]?.time || "",
+        }));
+
+        setSessions(lessonsWithStatus);
+
+        // 4) 최초 1회만 오늘 날짜 기준으로 currentRoutineIndex 계산
         if (!hasInitialized.current) {
           hasInitialized.current = true;
           const todayStr = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
 
-          // routineNumber별로 lessons 그룹핑
           const routineMap = {};
-          lessons.forEach((item) => {
+          lessonsWithStatus.forEach((item) => {
             const num = item.routineNumber || 1;
             if (!routineMap[num]) routineMap[num] = [];
             routineMap[num].push(item);
           });
 
-          // 루틴 순서대로 배열화
-          const routinesArray = Object.values(routineMap).sort(
+          const routinesArrayLocal = Object.values(routineMap).sort(
             (a, b) => a[0].routineNumber - b[0].routineNumber
           );
 
-          // 오늘 날짜가 속한 루틴 인덱스 찾기
-          const idx = routinesArray.findIndex((group) =>
+          const idx = routinesArrayLocal.findIndex((group) =>
             group.some((l) => l.date === todayStr)
           );
           setCurrentRoutineIndex(idx >= 0 ? idx : 0);
@@ -117,8 +171,7 @@ export default function PaymentPage() {
     );
 
     return () => unsubRoutine();
-  }, [studentId]);
-
+  }, [studentId, student]);
   // 결제방법 선택 핸들러
   const handlePaymentSelect = async (method, routineNum) => {
     // UI 업데이트
@@ -282,27 +335,82 @@ export default function PaymentPage() {
             <th style={{ border: "1px solid #ccc", padding: 8 }}>시간</th>
           </tr>
         </thead>
-        <tbody>
-          {currentRoutine.map((s, idx) => (
-            <tr key={idx}>
-              <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>
-                {s.session}
-              </td>
-              <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>
-                {s.makeupDate ? (
-                  <span><s>{s.date}</s> ➔ {s.makeupDate}</span>
-                ) : (
-                  s.date
-                )}
-              </td>
-              <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>
-                {s.status}
-              </td>
-              <td style={{ border: "1px solid #ccc", padding: 8, textAlign: "center" }}>
-                {s.time || "-"}
-              </td>
-            </tr>
-          ))}
+                <tbody>
+          {currentRoutine.map((s, idx) => {
+            // ✅ 앞쪽에 나온 이월 개수
+            const carryCountBefore = currentRoutine
+              .slice(0, idx)
+              .reduce(
+                (cnt, prev) => cnt + (prev.status === "carryover" ? 1 : 0),
+                0
+              );
+
+            const isCarry = s.status === "carryover";
+            // ✅ 이월이면 X, 아니면 앞에 나온 이월 개수만큼 회차에서 빼서 이어지게
+            const displaySession = isCarry
+              ? "X"
+              : (s.session || idx + 1) - carryCountBefore;
+
+            return (
+              <tr key={idx}>
+                {/* 회차 */}
+                <td
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: 8,
+                    textAlign: "center",
+                  }}
+                >
+                  {displaySession}
+                </td>
+
+                {/* 날짜: 이월이면 가운데 줄 */}
+                <td
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: 8,
+                    textAlign: "center",
+                  }}
+                >
+                  <span
+                    style={
+                      isCarry
+                        ? {
+                            textDecoration: "line-through",
+                            color: "#999",
+                          }
+                        : {}
+                    }
+                  >
+                    {s.date}
+                  </span>
+                </td>
+
+                {/* 상태 */}
+                <td
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: 8,
+                    textAlign: "center",
+                  }}
+                >
+                  {s.status}
+                </td>
+
+                {/* 시간 */}
+                <td
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: 8,
+                    textAlign: "center",
+                  }}
+                >
+                  {s.time || "-"}
+                </td>
+              </tr>
+            );
+          })}
+
           {currentRoutine.length === 0 && (
             <tr>
               <td colSpan={4} style={{ padding: 16, textAlign: "center", color: "#888" }}>
