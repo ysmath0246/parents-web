@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 import { Link } from "react-router-dom";
 
 export default function LoginPage({ onLoginSuccess }) {
@@ -68,7 +68,17 @@ export default function LoginPage({ onLoginSuccess }) {
       const chosen = candidates[0];
       localStorage.setItem("studentId", chosen.id);
       localStorage.setItem("studentName", chosen.data.name || "");
-
+  // ✅ 학부모 로그인 기록 저장 (parentLogins 컬렉션)
+      try {
+        await addDoc(collection(db, "parentLogins"), {
+          studentId: chosen.id,
+          studentName: chosen.data.name || "",
+          loginTime: serverTimestamp(),   // Firestore 서버시간
+        });
+      } catch (logErr) {
+        console.error("parentLogins 기록 중 오류:", logErr);
+        // 굳이 alert는 안 띄우고, 로그인은 계속 진행
+      }
       if (onLoginSuccess) onLoginSuccess();
       // 로그인 후 이동할 기본 경로 (원하는 곳으로 바꿔도 됨)
       navigate("/attendance");

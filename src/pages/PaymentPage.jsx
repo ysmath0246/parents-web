@@ -165,7 +165,9 @@ export default function PaymentPage() {
           const idx = routinesArrayLocal.findIndex((group) =>
             group.some((l) => l.date === todayStr)
           );
-          setCurrentRoutineIndex(idx >= 0 ? idx : 0);
+         // 최신 루틴(숫자 큰 게 첫 번째)이 기본 표시되게
+setCurrentRoutineIndex(0);
+
         }
       }
     );
@@ -204,9 +206,11 @@ export default function PaymentPage() {
     if (!routineGroups[num]) routineGroups[num] = [];
     routineGroups[num].push(s);
   });
-  const routinesArray = Object.values(routineGroups).sort(
-    (a, b) => a[0].routineNumber - b[0].routineNumber
-  );
+ // 최신 루틴(숫자 큰 것) 먼저 표시
+const routinesArray = Object.values(routineGroups).sort(
+  (a, b) => b[0].routineNumber - a[0].routineNumber
+);
+
 
   // 현재 보고 있는 루틴과 루틴 번호
   const currentRoutine = routinesArray[currentRoutineIndex] || [];
