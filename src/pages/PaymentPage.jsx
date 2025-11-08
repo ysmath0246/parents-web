@@ -23,7 +23,7 @@ export default function PaymentPage() {
   const [sessions, setSessions] = useState([]);            // 전체 lessons 배열
   const [currentRoutineIndex, setCurrentRoutineIndex] = useState(0);  // 현재 보고 있는 루틴 인덱스
   const [selectedPayments, setSelectedPayments] = useState({});       // 루틴별 선택된 결제방법
-  const [paymentStatuses, setPaymentStatuses] = useState({});         // 루틴별 결제완료 여부
+ const [isPaid, setIsPaid] = useState(false);             // ✅ 현재 루틴 결제완료 여부
 
   // 지원하는 결제 방법 목록
   const paymentMethods = ["계좌이체", "결제선생", "카드"];
@@ -61,24 +61,7 @@ export default function PaymentPage() {
     return () => unsub();
   }, [studentId]);
 
-  // 3) 루틴별 결제 완료 상태 구독
-  useEffect(() => {
-    if (!studentId) return;
-    const unsub = onSnapshot(
-      collection(db, "payment_completed"),
-      (qs) => {
-        const map = {};
-        qs.docs.forEach((d) => {
-          const data = d.data();
-          if (data.studentId === studentId) {
-            map[String(data.routineNumber)] = data.paymentComplete;
-          }
-        });
-        setPaymentStatuses(map);
-      }
-    );
-    return () => unsub();
-  }, [studentId]);
+
 
   // 4) 전체 루틴 실시간 구독 (새 routines 구조 기준) + 최초 1회만 today 기준 루틴 인덱스 설정
   useEffect(() => {
@@ -196,8 +179,7 @@ setCurrentRoutineIndex(0);
     );
   };
 
-  // 로딩 상태
-  if (!student) return <p>로딩 중…</p>;
+
 
   // sessions → routineNumber별 그룹핑
   const routineGroups = {};
@@ -214,12 +196,42 @@ const routinesArray = Object.values(routineGroups).sort(
 
   // 현재 보고 있는 루틴과 루틴 번호
   const currentRoutine = routinesArray[currentRoutineIndex] || [];
-  const routineNumber =
-    currentRoutine[0]?.routineNumber ?? currentRoutineIndex + 1;
+ const routineNumber =
+  currentRoutine[0]?.routineNumber ?? currentRoutineIndex + 1;
 
-  // 다음 루틴 시작일
-  const nextRoutineFirstDate =
-    routinesArray[currentRoutineIndex + 1]?.[0]?.date;
+
+
+// 현재 보고 있는 루틴의 결제완료 여부를 payment_completed에서 직접 조회
+useEffect(() => {
+  // student 또는 routineNumber가 아직 없으면 패스
+  if (!student || !routineNumber) {
+    setIsPaid(false);
+    return;
+  }
+
+  const docId = `${student.name}_${routineNumber}`; // 예: "김승우_10"
+
+  const fetchPaymentComplete = async () => {
+    try {
+      const snap = await getDoc(doc(db, "payment_completed", docId));
+      if (!snap.exists()) {
+        // 문서 자체가 없으면 결제 전
+        setIsPaid(false);
+        return;
+      }
+      const data = snap.data();
+      setIsPaid(!!data.paymentComplete);
+    } catch (e) {
+      console.error("payment_completed 조회 오류:", e);
+      setIsPaid(false);
+    }
+  };
+
+  fetchPaymentComplete();
+}, [student, routineNumber]);
+
+  // 🔻 모든 훅 정의가 끝난 뒤에 로딩 체크
+  if (!student) return <p>로딩 중…</p>;
 
   return (
     <div className="container-wide" style={{ textAlign: "center" }}>
@@ -230,23 +242,13 @@ const routinesArray = Object.values(routineGroups).sort(
 
       {/* 2️⃣ 결제 완료 여부 */}
       <p style={{ fontSize: 18, marginBottom: 16 }}>
-        {paymentStatuses[routineNumber]
-          ? "✅ 결제완료 되었습니다."
-          : "⚠️ 아직 결제전입니다. 수업시작일 전에 결제 부탁드립니다."}
-      </p>
+  {isPaid
+    ? "✅ 결제완료 되었습니다."
+    : "⚠️ 아직 결제전입니다. 수업시작일 전에 결제 부탁드립니다."}
+</p>
 
-      {/* 3️⃣ 다음 루틴 안내 */}
-      <p style={{ fontSize: 16, marginBottom: 32 }}>
-        {nextRoutineFirstDate ? (
-          <>
-            ➡️ 다음수업시작일: {nextRoutineFirstDate}
-            <br />
-            다음 루틴 결제방법은 다음을 누르고 선택해주세요.
-          </>
-        ) : (
-          "다음 루틴 시작일 정보를 불러오지 못했습니다."
-        )}
-      </p>
+    
+        
 
       {/* 4️⃣ 결제 방법 선택 버튼 */}
       <div style={{
